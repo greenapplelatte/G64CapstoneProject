@@ -1,0 +1,289 @@
+:root {
+    --bg-dark: #12161a;
+    --card-bg: #22272d;
+    --card-border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-green: #7ee787;
+    --accent-yellow: #e3b341;
+    --accent-red: #f85149;
+    --accent-blue: #0d419d;
+    --header-green: #238636;
+    --brand-orange: #f0883e;
+    --header-red: #8e1519;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 25px;
+    min-height: 100vh;
+}
+
+/* Header & Status Pill */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.title-area h1 { margin: 0; font-size: 1.8rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+.time-area { text-align: right; color: var(--text-secondary); font-size: 0.85rem; }
+
+.session-badge {
+    background: #142a1b;
+    color: var(--accent-green);
+    border: 1px solid #238636;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* Top Summary Metric Cards */
+.grid-top-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.metric-card .card-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.metric-card .card-val {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+.metric-card .card-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.metric-card .card-link {
+    font-size: 0.75rem;
+    color: var(--accent-yellow);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Progress Bar */
+.target-progress-bg {
+    background: #161b22;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.target-progress-fill {
+    background: var(--accent-green);
+    height: 100%;
+}
+
+/* Main Grid Layout */
+.grid-sp-main {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-header-bar {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-blue { background: var(--accent-blue); }
+.header-green { background: var(--header-green); }
+.header-red { background: var(--header-red); }
+
+.card-body { padding: 20px; }
+
+/* Station Status Cards Grid */
+.station-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.station-box {
+    background: #161b22;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 14px;
+    position: relative;
+}
+
+.station-box.border-paused {
+    border-left: 3px solid var(--accent-yellow);
+}
+
+.station-box.border-running {
+    border-left: 3px solid var(--accent-green);
+}
+
+.station-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.station-code { font-weight: bold; font-size: 0.95rem; display: block; }
+.station-staff { font-size: 0.75rem; color: var(--text-secondary); }
+
+.badge-status {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: bold;
+}
+
+.badge-RUNNING { background: #142a1b; color: var(--accent-green); border: 1px solid #238636; }
+.badge-PAUSED { background: #2d2613; color: var(--accent-yellow); border: 1px solid #9e7317; }
+
+.station-val-line {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.station-val-line .good-val { color: var(--accent-yellow); margin-right: 8px; }
+.station-val-line .ng-val { color: var(--brand-orange); }
+
+.station-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+}
+
+/* Hourly Chart Widget */
+.chart-container-hourly {
+    height: 180px;
+    width: 100%;
+    position: relative;
+    margin-top: 10px;
+}
+
+.hourly-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.legend-bar-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+
+/* Floor Alerts Feed */
+.alert-feed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #21262d;
+}
+
+.alert-feed-item:last-child { border-bottom: none; }
+
+.alert-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot-alert { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-warning { background: var(--accent-yellow); }
+.dot-defect { background: var(--brand-orange); }
+.dot-info { background: var(--accent-green); }
+
+.alert-feed-text strong { display: block; font-size: 0.85rem; }
+.alert-feed-text small { color: var(--text-secondary); font-size: 0.75rem; }
+.alert-feed-time { font-size: 0.75rem; color: var(--text-secondary); }
+
+/* Review Queue List */
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #21262d;
+}
+
+.review-item:last-child { border-bottom: none; }
+
+.review-text strong { display: block; font-size: 0.88rem; }
+.review-text small { color: var(--text-secondary); font-size: 0.75rem; }
+
+.pill-sev-gold {
+    background: var(--accent-yellow);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-right: 8px;
+}
+
+.btn-review-outline {
+    background: transparent;
+    border: 1px solid var(--accent-yellow);
+    color: var(--accent-yellow);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-review-outline:hover {
+    background: var(--accent-yellow);
+    color: #000;
+}

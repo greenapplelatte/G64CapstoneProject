@@ -1,0 +1,301 @@
+:root {
+    --bg-dark: #12161a;
+    --card-bg: #22272d;
+    --card-border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-green: #7ee787;
+    --accent-yellow: #e3b341;
+    --accent-red: #f85149;
+    --accent-blue: #1f6beb;
+    --brand-orange: #f0883e;
+    --header-blue: #0d419d;
+    --header-green: #238636;
+    --input-bg: #161b22;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 25px;
+    min-height: 100vh;
+}
+
+/* Header & Period Pills */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.title-area h1 { margin: 0; font-size: 1.8rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+.time-area { text-align: right; color: var(--text-secondary); font-size: 0.85rem; }
+
+.period-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.period-label { font-size: 0.75rem; color: var(--text-secondary); margin-right: 8px; text-transform: uppercase; font-weight: bold; }
+
+.btn-period {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-period.active {
+    background: var(--accent-yellow);
+    color: #000;
+    font-weight: bold;
+    border-color: var(--accent-yellow);
+}
+
+.date-range-badge {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: 10px;
+}
+
+/* Layout Grid */
+.grid-manager-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-header-bar {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-blue { background: var(--header-blue); }
+.header-green { background: var(--header-green); }
+
+.card-body { padding: 20px; }
+
+/* Plant OEE Main Card */
+.oee-overview-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.gauge-box {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.gauge-svg {
+    transform: rotate(-90deg);
+    width: 140px;
+    height: 140px;
+}
+
+.gauge-bg { fill: none; stroke: #161b22; stroke-width: 12; }
+.gauge-fill { fill: none; stroke: var(--accent-green); stroke-width: 12; stroke-dasharray: 376; stroke-dashoffset: 81; transition: stroke-dashoffset 0.5s ease; }
+
+.gauge-center {
+    position: absolute;
+    text-align: center;
+}
+
+.gauge-val { font-size: 1.6rem; font-weight: bold; line-height: 1; }
+.gauge-lbl { font-size: 0.7rem; color: var(--text-secondary); }
+
+.oee-summary-text { font-size: 0.85rem; line-height: 1.5; color: var(--text-primary); }
+.pts-badge { background: #142a1b; color: var(--accent-green); border: 1px solid #238636; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; margin-right: 6px; }
+
+/* OEE Weekly Chart Card Styles */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    padding: 10px 0;
+}
+
+.trend-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.grid-line {
+    stroke: #2d333b;
+    stroke-width: 1;
+}
+
+.target-line {
+    stroke: var(--accent-yellow);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+}
+
+.area-fill {
+    fill: url(#blueGradient);
+    opacity: 0.35;
+}
+
+.trend-line {
+    fill: none;
+    stroke: #58a6ff;
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.data-point {
+    fill: var(--card-bg);
+    stroke: #58a6ff;
+    stroke-width: 3;
+    r: 5;
+    transition: r 0.2s ease;
+}
+
+.data-point:hover {
+    r: 7;
+    cursor: pointer;
+}
+
+.chart-axis-text {
+    fill: var(--text-secondary);
+    font-size: 11px;
+    font-family: inherit;
+}
+
+.val-label {
+    fill: var(--text-primary);
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
+.target-label {
+    fill: var(--accent-yellow);
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: end;
+}
+
+/* A x P x Q Metric Cards */
+.apq-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.apq-card {
+    background: #161b22;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.apq-title { font-size: 0.68rem; color: var(--text-secondary); text-transform: uppercase; }
+.apq-val { font-size: 1.5rem; font-weight: bold; color: var(--brand-orange); margin: 4px 0; }
+.apq-target { font-size: 0.72rem; color: var(--text-secondary); }
+
+/* Total Volume Meters */
+.volume-row {
+    display: flex;
+    justify-content: space-between;
+    background: #161b22;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.volume-item label { display: block; font-size: 0.68rem; color: var(--text-secondary); text-transform: uppercase; }
+.volume-item strong { font-size: 1.2rem; }
+
+/* Where OEE is lost */
+.loss-row { margin-bottom: 12px; }
+.loss-header { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+.loss-bar-bg { background: #161b22; height: 10px; border-radius: 5px; overflow: hidden; }
+.loss-bar-fill { background: var(--brand-orange); height: 100%; }
+
+/* Line Performance Table */
+.line-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.line-table th { text-align: left; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; padding: 8px; border-bottom: 1px solid var(--card-border); }
+.line-table td { padding: 10px 8px; border-bottom: 1px solid #21262d; }
+
+.badge-lowest { background: var(--brand-orange); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px; }
+
+/* Right Column Widgets */
+.attention-item {
+    background: #161b22;
+    border-left: 3px solid var(--accent-red);
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.attention-item h4 { margin: 0; font-size: 0.85rem; }
+.attention-item p { margin: 2px 0 0 0; font-size: 0.75rem; color: var(--text-secondary); }
+
+.pill-priority { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+.prio-High { background: var(--brand-orange); color: #000; }
+.prio-Medium { background: var(--accent-yellow); color: #000; }
+.prio-Low { background: var(--accent-green); color: #000; }
+
+/* Action Box */
+.action-box {
+    background: #1c2128;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.action-box p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px; }
+.btn-action-gold { background: var(--accent-yellow); color: #000; border: none; width: 100%; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+
+/* Executive Report Form */
+.report-select { width: 100%; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--card-border); padding: 8px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 15px; }
+
+.check-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; font-size: 0.82rem; }
+.check-item { display: flex; align-items: center; gap: 8px; }
+
+.btn-generate { background: var(--accent-green); color: #000; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; margin-bottom: 10px; }
+.btn-row { display: flex; gap: 10px; }
+.btn-export-sub { flex: 1; background: #30363d; color: var(--text-primary); border: 1px solid var(--card-border); padding: 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; text-align: center; }

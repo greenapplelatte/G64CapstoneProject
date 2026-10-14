@@ -1,0 +1,259 @@
+:root {
+    --bg-dark: #12161a;
+    --card-bg: #22272d;
+    --card-border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-green: #7ee787;
+    --accent-yellow: #e3b341;
+    --accent-red: #f85149;
+    --accent-blue: #0d419d;
+    --header-green: #238636;
+    --input-bg: #161b22;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 25px;
+    min-height: 100vh;
+}
+
+/* Header & Counter Pills */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.title-area h1 { margin: 0; font-size: 1.8rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+.time-area { text-align: right; color: var(--text-secondary); font-size: 0.85rem; }
+
+.pill-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-counter-pill {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-counter-pill.active {
+    background: var(--accent-yellow);
+    color: #000;
+    font-weight: bold;
+    border-color: var(--accent-yellow);
+}
+
+/* Layout Grid */
+.grid-master-main {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-header-bar {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-blue { background: var(--accent-blue); }
+.header-green { background: var(--header-green); }
+
+.card-body { padding: 20px; }
+
+/* Table Styles */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.data-table th {
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #21262d;
+}
+
+.station-code { font-weight: bold; display: block; }
+.station-sub { font-size: 0.75rem; color: var(--text-secondary); }
+
+.status-text-Online { color: var(--accent-green); font-weight: bold; }
+.status-text-Maintenance {
+    background: #e3b341;
+    color: #000;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.btn-edit-sm {
+    background: #30363d;
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+/* Footer Action Buttons */
+.table-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 18px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.btn-show-all {
+    background: #30363d;
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-add-green {
+    background: var(--accent-green);
+    color: #000;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Form Styles */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.form-control {
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    outline: none;
+}
+
+.section-sub-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+}
+
+.btn-save-defaults {
+    background: var(--accent-green);
+    color: #000;
+    border: none;
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Defect Types List */
+.defect-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #21262d;
+}
+
+.defect-list-item:last-child { border-bottom: none; }
+
+.pill-sev {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.pill-Minor { background: #238636; color: #fff; }
+.pill-Major { background: var(--accent-yellow); color: #000; }
+
+.check-active {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--accent-green);
+}
+
+.btn-add-defect-dash {
+    background: transparent;
+    border: 1px solid var(--accent-yellow);
+    color: var(--text-primary);
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+}

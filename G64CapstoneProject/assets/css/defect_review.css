@@ -1,0 +1,284 @@
+:root {
+    --bg-dark: #12161a;
+    --card-bg: #22272d;
+    --card-border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-green: #7ee787;
+    --accent-yellow: #e3b341;
+    --accent-red: #f85149;
+    --accent-blue: #0d419d;
+    --header-green: #238636;
+    --brand-orange: #f0883e;
+    --input-bg: #161b22;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 25px;
+    min-height: 100vh;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.title-area h1 { margin: 0; font-size: 1.8rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+.time-area { text-align: right; color: var(--text-secondary); font-size: 0.85rem; }
+
+/* Layout Grid */
+.grid-dqr-main {
+    display: grid;
+    grid-template-columns: 1.6fr 1.2fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-header-bar {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-blue { background: var(--accent-blue); }
+.header-green { background: var(--header-green); }
+
+.card-body { padding: 20px; }
+
+/* Filter Pills Toolbar */
+.filter-pills-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn-filter-pill {
+    background: #161b22;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-filter-pill.active {
+    background: var(--accent-yellow);
+    color: #000;
+    font-weight: bold;
+    border-color: var(--accent-yellow);
+}
+
+/* Defect Queue List Item */
+.queue-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 12px;
+    border-bottom: 1px solid #21262d;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.2s;
+}
+
+.queue-item:hover {
+    background: #161b22;
+}
+
+.queue-item.selected {
+    background: #1c2128;
+    border-left: 3px solid var(--accent-yellow);
+}
+
+.queue-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.queue-title small {
+    color: var(--text-secondary);
+    font-weight: normal;
+    font-size: 0.8rem;
+}
+
+.queue-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+.badge-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pill-sev {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.pill-Major { background: var(--accent-yellow); color: #000; }
+.pill-Minor { background: #238636; color: #fff; }
+
+.status-text-Pending { color: var(--accent-yellow); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
+.status-text-Confirmed { color: var(--accent-green); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
+.status-text-Rejected { color: var(--text-secondary); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
+
+/* Right Panel Details */
+.review-header-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.review-header-title h2 { margin: 0; font-size: 1.5rem; }
+
+.meta-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 0.82rem;
+}
+
+.meta-two-col label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.meta-two-col strong {
+    font-size: 0.9rem;
+}
+
+.notes-box {
+    background: #161b22;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.photo-preview-placeholder {
+    border: 1px dashed var(--card-border);
+    border-radius: 6px;
+    padding: 30px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-group-review {
+    margin-bottom: 15px;
+}
+
+.form-group-review label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.textarea-comment {
+    width: 100%;
+    background: #161b22;
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+    resize: vertical;
+    min-height: 70px;
+}
+
+/* Action Buttons */
+.btn-confirm-green {
+    background: #a6e3a1;
+    color: #000;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.88rem;
+    cursor: pointer;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+
+.btn-row-dual {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.btn-recheck-gold {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--accent-yellow);
+    color: var(--accent-yellow);
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.btn-reject-gray {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #6e7681;
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.footer-notice {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}

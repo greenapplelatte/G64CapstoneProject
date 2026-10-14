@@ -1,0 +1,180 @@
+:root {
+    --sidebar-bg: #0d1117;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --card-border: #30363d;
+    --nav-hover: #21262d;
+    --brand-accent: #f0883e;
+    --btn-danger: #a40e0e;
+    --btn-danger-hover: #c51616;
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.brand-logo {
+    background: var(--brand-accent);
+    color: #ffffff;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.brand-info strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.1;
+}
+
+.brand-info small {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.section-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin: 18px 0 8px 10px;
+    font-weight: bold;
+}
+
+/* Sidebar Nav Links */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+    font-weight: 500; /* Medium weight for default items */
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-item:hover {
+    background-color: var(--nav-hover);
+    color: var(--text-primary);
+}
+
+/* Active State - Bold Text & Highlight */
+.nav-item.active {
+    background-color: #21262d;
+    color: #ffffff !important;
+    font-weight: 700 !important; /* Bold font weight for active page */
+}
+
+/* Ensure inner text span inherits bold weight */
+.nav-item.active .nav-text {
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+/* Accent Indicator Bar for Active Link (Optional visual indicator) */
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 20px;
+    background-color: var(--brand-accent, #f0883e);
+    border-radius: 0 4px 4px 0;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--card-border);
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #161b22;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.avatar {
+    background: #d29922;
+    color: #000;
+    font-weight: bold;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.user-name {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-weight: bold;
+}
+
+.user-role-label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.btn-logout {
+    background: var(--btn-danger);
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+}
+
+.btn-logout:hover {
+    background: var(--btn-danger-hover);
+}

@@ -1,0 +1,449 @@
+/* Layout & Container */
+.profile-page-container {
+    width: 100%;
+    padding: 24px;
+    max-width: 1100px;
+    margin-inline: auto;
+}
+
+.profile-header {
+    text-align: center;
+}
+
+.profile-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 3px;
+    line-height: 1.1;
+}
+
+.profile-header p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.15;
+    margin-bottom: 20px;
+}
+
+/* Security Notice Banner */
+.security-banner {
+    width: 100%;
+    max-width: 960px;
+    background-color: #fefce8;
+    border: 1px solid #fef08a;
+    color: #854d0e;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.security-banner i {
+    font-size: 1.1rem;
+    color: #ca8a04;
+}
+
+/* Two Column Layout Grid */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 960px;
+    margin-inline: auto;
+}
+
+.profile-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* Avatar Upload Styling */
+.identity-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.avatar-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 16px;
+}
+
+.avatar-label {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #0f4c81;
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-label img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 1.2rem;
+}
+
+.avatar-label:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 0 auto 16px;
+    padding: 8px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #b91c1c;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.avatar-delete-button:hover {
+    background: #fef2f2;
+}
+
+.profile-username {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.profile-name-form {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.profile-name-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.profile-name-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-name-controls input {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    padding: 9px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    font-size: 0.85rem;
+}
+
+.profile-name-controls input:focus {
+    outline: none;
+    border-color: #0284c7;
+}
+
+.profile-name-controls button {
+    flex: 0 0 auto;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #0f4c81;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.profile-name-controls button:hover {
+    background: #0b3c66;
+}
+
+.role-badge {
+    background-color: #e0f2fe;
+    color: #0284c7;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+}
+
+.profile-info-list {
+    width: 100%;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+
+.info-label {
+    color: #64748b;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.info-value.status-active {
+    color: #10b981;
+}
+
+.info-value.text-warning {
+    color: #d97706;
+}
+
+/* Security Form Styling */
+.security-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.section-desc {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+    padding: 10px 38px 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: #f8fafc;
+    transition: border-color 0.2s ease;
+}
+
+.password-input-wrapper input:focus {
+    outline: none;
+    border-color: #0284c7;
+    background: #ffffff;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.match-icon {
+    position: absolute;
+    right: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #10b981;
+    display: none;
+}
+
+/* Strength Meter */
+.strength-gauge-container {
+    margin: 20px 0;
+}
+
+.strength-text {
+    font-size: 0.82rem;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+#strengthLabel.weak {
+    color: #b91c1c;
+}
+
+#strengthLabel.good {
+    color: #0284c7;
+}
+
+#strengthLabel.strong {
+    color: #059669;
+}
+
+.strength-meter {
+    position: relative;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.meter-line {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    background: #0284c7;
+    transition: width 0.3s ease;
+}
+
+.meter-line.strong {
+    background: #059669;
+}
+
+.step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    border: 2px solid #ffffff;
+    z-index: 1;
+}
+
+.step-dot.active {
+    background: #0284c7;
+}
+
+/* Validation Checklist */
+.password-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.rule-item {
+    font-size: 0.82rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rule-item.valid {
+    color: #059669;
+}
+
+.btn-primary-block {
+    width: 100%;
+    background-color: #0f4c81;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary-block:hover {
+    background-color: #0b3c66;
+}
+
+@media (max-width: 1100px) {
+    .profile-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-page-container {
+        padding: 16px;
+    }
+
+    .profile-card {
+        padding: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .info-row {
+        gap: 12px;
+    }
+
+    .info-value {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+}
