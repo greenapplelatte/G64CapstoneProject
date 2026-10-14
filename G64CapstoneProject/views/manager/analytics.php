@@ -61,11 +61,9 @@ check_role('manager');
                         <small id="yield-date-range">Last 30 days · awaiting data</small>
                     </div>
                     <div class="card-body">
-                        <div class="yield-summary-title">
-                            <span class="yield-val-large" id="yield-average">—</span>
-                            <span class="yield-meta">Calculated from available production records.</span>
-                        </div>
-
+                           <div class="yield-summary-title">
+                              <span class="yield-meta">Daily production yield</span>
+                           </div>
                         <!-- SVG Line Chart -->
                         <div class="chart-container">
                             <svg class="yield-svg" viewBox="0 0 600 180" preserveAspectRatio="none">
@@ -84,10 +82,6 @@ check_role('manager');
 
                                 <line x1="50" y1="170" x2="570" y2="170" class="grid-line"/>
                                 <text x="40" y="174" class="chart-axis-text" text-anchor="end">90%</text>
-
-                                <!-- Target 97% Line -->
-                                <line x1="50" y1="80" x2="570" y2="80" class="target-line"/>
-                                <text x="570" y="72" class="target-label">Target 97%</text>
 
                                 <!-- Dynamic Line Path -->
                                 <path id="yield-line-path" class="trend-line" d="" />
