@@ -57,8 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         "SELECT id, username, password, role, full_name, status, must_change_password FROM users WHERE username = ?",
         "s", [$username]);
 
-    // Real password check only (no shared/plain-text fallback), and disabled accounts cannot sign in.
-    // A disabled account gets the same generic message so account status is not revealed.
+    // Only disclose disabled status after verifying the correct password.
+    // Incorrect credentials still receive the generic error to prevent username enumeration.
+    if ($user && password_verify($password, $user['password']) && ($user['status'] ?? 'Active') !== 'Active') {
+        header("Location: ../login.php?error=deactivated");
+        exit();
+    }
+
+    // Real password check only; only active accounts can start an authenticated session.
     if ($user
         && ($user['status'] ?? 'Active') === 'Active'
         && in_array($user['role'], ['manager', 'supervisor', 'staff'], true)

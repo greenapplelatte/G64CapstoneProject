@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 check_role('staff');
 
-$user_id = $_SESSION['user_id'] ?? 1;
+$user_id = $_SESSION['user_id'];
 $action  = $_GET['action'] ?? '';
 
 // Fetch Profile Information
@@ -24,21 +24,41 @@ if ($action === 'get_profile') {
 // Update Account Details
 if ($action === 'update_account') {
     require_post();
-    $contact = trim($_POST['contact_number'] ?? '');
-    if ($contact !== '' && !preg_match('/^(?:\+63|0)9[0-9]{9}$/', preg_replace('/[\s-]+/', '', $contact))) {
-        echo json_encode(['status' => 'error', 'message' => 'Enter a valid Philippine mobile number (e.g. 09171234567 or +639171234567).']);
+    $full_name = trim((string)($_POST['full_name'] ?? ''));
+    $department = trim((string)($_POST['department'] ?? ''));
+    $contact = trim((string)($_POST['contact_number'] ?? ''));
+    $normalized_contact = preg_replace('/[\s-]+/', '', $contact);
+
+    if (mb_strlen($full_name) < 2 || mb_strlen($full_name) > 100 || preg_match('/[<>\x00-\x1F]/', $full_name)) {
+        http_response_code(422);
+        echo json_encode(['status' => 'error', 'message' => 'Full name must contain 2 to 100 valid characters.']);
+        exit;
+    }
+    if (mb_strlen($department) < 2 || mb_strlen($department) > 100 || preg_match('/[<>\x00-\x1F]/', $department)) {
+        http_response_code(422);
+        echo json_encode(['status' => 'error', 'message' => 'Department must contain 2 to 100 valid characters.']);
+        exit;
+    }
+    if ($normalized_contact !== '' && !preg_match('/^(?:\+63|0)9[0-9]{9}$/', $normalized_contact)) {
+        http_response_code(422);
+        echo json_encode(['status' => 'error', 'message' => 'Enter a valid Philippine mobile number, such as 09171234567.']);
         exit;
     }
 
-    $stmt = $conn->prepare("UPDATE users SET contact_number = ? WHERE id = ?");
-    $stmt->bind_param("si", $contact, $user_id);
-
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Account details saved successfully.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to update contact details.']);
+    try {
+        $stmt = $conn->prepare('UPDATE users SET full_name = ?, department = ?, contact_number = ? WHERE id = ?');
+        $stmt->bind_param('sssi', $full_name, $department, $normalized_contact, $user_id);
+        $stmt->execute();
+        $stmt->close();
+        $_SESSION['full_name'] = $full_name;
+        echo json_encode(['status' => 'success', 'message' => 'Profile saved.', 'data' => [
+            'full_name' => $full_name, 'department' => $department, 'contact_number' => $normalized_contact
+        ]]);
+    } catch (Throwable $e) {
+        error_log('Profile update failed: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to save profile. Please try again.']);
     }
-    $stmt->close();
     exit;
 }
 

@@ -1,8 +1,4 @@
 <?php
-// Enable error output for debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 require_once __DIR__ . '/../../config/app.php';   // starts the session with the shared cookie options
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -24,20 +20,22 @@ require_once $db_path;
 require_once __DIR__ . '/../../includes/functions.php'; // Provides db_one(), db_all(), and db_run()
 require_once $auth_path;
 
-// Fallback role check if function exists
-if (function_exists('check_role')) {
-    check_role('staff');
-    $staffContext = db_one($conn, "SELECT u.assigned_station, s.workstation_name FROM users u LEFT JOIN master_stations s ON s.station_code = u.assigned_station WHERE u.id = ?", "i", [(int)$_SESSION['user_id']]);
-} else {
-    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'staff') {
-        header("Location: " . BASE_URL . "/login.php");
-        exit();
-    }
-}
+check_role('staff');
+$staffContext = db_one($conn, "SELECT u.assigned_station, s.workstation_name, s.line_name FROM users u LEFT JOIN master_stations s ON s.station_code = u.assigned_station WHERE u.id = ?", "i", [(int)$_SESSION['user_id']]);
 
-$stationOptions = db_all($conn, "SELECT station_code, workstation_name FROM master_stations WHERE status <> 'Maintenance' ORDER BY station_code");
-$categoryOptions = db_all($conn, "SELECT category_name FROM defect_categories ORDER BY category_name");
-$projectOptions = db_all($conn, "SELECT project_type FROM master_project_types WHERE is_active = 1 ORDER BY project_type");
+$stationOptions = [];
+$categoryOptions = [];
+$projectOptions = [];
+$workstationOptions = [];
+$masterDataError = '';
+try {
+    $categoryOptions = db_all($conn, "SELECT category_name FROM defect_categories ORDER BY category_name");
+    $projectOptions = db_all($conn, "SELECT project_type FROM master_project_types WHERE is_active = 1 ORDER BY project_type");
+    $workstationOptions = db_all($conn, "SELECT workstation_name FROM master_workstations WHERE is_active = 1 ORDER BY workstation_name");
+} catch (mysqli_sql_exception $e) {
+    error_log('Defect report master data error: ' . $e->getMessage());
+    $masterDataError = 'Master Data needs a database update. Ask a manager to import config/database.sql, then reload this page.';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,8 +48,10 @@ $projectOptions = db_all($conn, "SELECT project_type FROM master_project_types W
     <!-- Shared Sidebar & Page CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/sidebar.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/defect_reporting.css">
+    <!-- Staff-only theme; all existing JS/PHP processes remain unchanged -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/staff-theme.css?v=1">
 </head>
-<body>
+<body class="staff-theme">
 
     <!-- Shared Role-Filtered Sidebar -->
     <?php include_once __DIR__ . '/../../includes/sidebar.php'; ?>
@@ -65,7 +65,7 @@ $projectOptions = db_all($conn, "SELECT project_type FROM master_project_types W
             </div>
             <div class="time-area">
                 <div id="current-datetime"><?= date('M d, Y · h:i A'); ?></div>
-                <div style="color:var(--text-secondary)">Station <strong><?= htmlspecialchars(($staffContext['assigned_station'] ?? '') ?: 'Not assigned', ENT_QUOTES); ?></strong></div>
+                <div style="color:var(--text-secondary)">Station <strong><?= htmlspecialchars(($staffContext['assigned_station'] ?? '') ? $staffContext['assigned_station'] . (!empty($staffContext['line_name']) ? ' · ' . $staffContext['line_name'] : '') : 'Not assigned', ENT_QUOTES); ?></strong></div>
             </div>
         </header>
 
@@ -95,20 +95,23 @@ $projectOptions = db_all($conn, "SELECT project_type FROM master_project_types W
             <div class="card">
                 <div class="card-header-bar header-green">NEW DEFECT REPORT</div>
                 <div class="card-body">
-                    <form id="defectForm" enctype="multipart/form-data">
+                    <?php if ($masterDataError !== ''): ?>
+                        <div class="master-data-error" role="alert"><?= htmlspecialchars($masterDataError, ENT_QUOTES); ?></div>
+                    <?php endif; ?>
+                    <form id="defectForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Project Type</label>
                                 <select name="project_type" class="form-control" required>
                                     <option value="" disabled selected>Choose</option>
-                                    <?php foreach ($projectOptions as $project): ?><option value="<?= htmlspecialchars($project['project_type'], ENT_QUOTES); ?>"><?= htmlspecialchars($project['project_type']); ?></option><?php endforeach; ?>
+                                    <?php foreach ($projectOptions as $project): ?><option value="<?= htmlspecialchars($project['project_type'], ENT_QUOTES); ?>"><?= htmlspecialchars($project['project_type'], ENT_QUOTES); ?></option><?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label>Workstation</label>
                                 <select name="workstation" class="form-control" required>
                                     <option value="" disabled selected>Choose</option>
-                                    <?php foreach ($stationOptions as $stationOption): if (($stationOption['station_code'] ?? '') !== ($staffContext['assigned_station'] ?? '')) continue; ?><option value="<?= htmlspecialchars($stationOption['workstation_name'], ENT_QUOTES); ?>"><?= htmlspecialchars($stationOption['workstation_name']); ?></option><?php endforeach; ?>
+                                    <?php foreach ($workstationOptions as $workstationOption): ?><option value="<?= htmlspecialchars($workstationOption['workstation_name'], ENT_QUOTES); ?>"><?= htmlspecialchars($workstationOption['workstation_name'], ENT_QUOTES); ?></option><?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -140,13 +143,6 @@ $projectOptions = db_all($conn, "SELECT project_type FROM master_project_types W
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label>Notes (optional)</label>
                             <textarea name="notes" class="form-control" placeholder="What did you see? Where on the unit?"></textarea>
-                        </div>
-
-                        <div class="photo-upload-box">
-                            <span id="photo-filename">📷 Add a photo of the defective unit</span>
-                            <button type="button" class="btn-attach" onclick="document.getElementById('photoInput').click()">Attach photo</button>
-                            <input type="file" name="photo" id="photoInput" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleFileSelect(this)">
-                            <img id="photo-preview" alt="Selected defect photo preview" style="display:none;max-width:100%;max-height:180px;margin-top:10px;border-radius:8px;">
                         </div>
 
                         <div class="form-footer">

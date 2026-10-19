@@ -54,6 +54,13 @@ body {
     gap: 8px;
 }
 
+#analytics-period-filter,
+#analytics-line-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .filter-label {
     font-size: 0.72rem;
     color: var(--text-secondary);

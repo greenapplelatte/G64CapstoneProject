@@ -63,9 +63,14 @@ function touch_station(mysqli $conn, string $station_code): bool {
 /** True when the station's device has been heard from within DEVICE_OFFLINE_AFTER_SEC seconds. */
 function station_is_online(mysqli $conn, string $station_code): bool {
     $r = db_one($conn,
-        "SELECT TIMESTAMPDIFF(SECOND, last_seen, NOW()) AS age FROM master_stations WHERE station_code = ?",
+        "SELECT TIMESTAMPDIFF(SECOND, ms.last_seen, NOW()) AS age,
+                COALESCE(ss.offline_threshold_sec, " . DEVICE_OFFLINE_AFTER_SEC . ") AS offline_threshold_sec
+         FROM master_stations ms
+         LEFT JOIN system_settings ss ON ss.id = 1
+         WHERE ms.station_code = ?",
         "s", [$station_code]);
-    return $r !== null && $r['age'] !== null && (int)$r['age'] <= DEVICE_OFFLINE_AFTER_SEC;
+    return $r !== null && $r['age'] !== null
+        && (int)$r['age'] <= max(1, (int)$r['offline_threshold_sec']);
 }
 
 /* ---------- line session / shift lookups ---------- */
@@ -83,6 +88,38 @@ function floor_alert(mysqli $conn, string $type, string $title, string $subtitle
     db_run($conn,
         "INSERT INTO supervisor_floor_alerts (alert_type, title, subtitle, alert_time) VALUES (?, ?, ?, ?)",
         "ssss", [$type, $title, $subtitle, $time]);
+}
+
+/**
+ * When an operator is moved to another station, their reports that are still waiting for a decision
+ * (Pending / Recheck Requested) move with them, so the supervisor queue shows the new station right away
+ * (the supervisor page refreshes every few seconds). The pending units on the open shift move too.
+ * Reviewed reports (Confirmed / Rejected) keep the station where the defect happened, because their NG
+ * counts were already added there. Returns how many reports were moved.
+ */
+function move_pending_defect_reports(mysqli $conn, int $user_id, string $new_station): int {
+    $rows = db_all($conn,
+        "SELECT id, station, quantity_rejected FROM defect_reports
+         WHERE reported_by_id = ? AND status IN ('Pending', 'Recheck Requested')
+           AND (station IS NULL OR station <> ?)",
+        "is", [$user_id, $new_station]);
+    if (!$rows) {
+        return 0;
+    }
+    $shift = get_open_shift($conn);
+    foreach ($rows as $r) {
+        db_run($conn, "UPDATE defect_reports SET station = ? WHERE id = ?", "si", [$new_station, (int)$r['id']]);
+        if ($shift) {
+            $qty = (int)$r['quantity_rejected'];
+            if (!empty($r['station'])) {
+                ws_adjust($conn, (int)$shift['id'], (string)$r['station'], 0, 0, -$qty);
+            }
+            ws_adjust($conn, (int)$shift['id'], $new_station, 0, 0, $qty);
+        }
+    }
+    $n = count($rows);
+    floor_alert($conn, 'info', "$n pending defect report(s) moved to $new_station", 'Operator reassigned');
+    return $n;
 }
 
 /**
@@ -139,9 +176,17 @@ function counting_block_reason(mysqli $conn, string $station_code) {
     if ($line['status'] !== 'RUNNING') {
         return 'Line is ' . strtolower($line['status']) . '.';
     }
-    $st = db_one($conn, "SELECT status FROM supervisor_station_status WHERE station_code = ?", "s", [$station_code]);
+    $st = db_one($conn,
+        "SELECT st.status, ms.status AS master_status
+         FROM supervisor_station_status st
+         JOIN master_stations ms ON ms.station_code = st.station_code
+         WHERE st.station_code = ?",
+        "s", [$station_code]);
     if (!$st) {
         return 'Unknown station.';
+    }
+    if ($st['master_status'] === 'Maintenance') {
+        return 'Station is under maintenance.';
     }
     if ($st['status'] !== 'RUNNING') {
         return 'Station is paused.';
@@ -213,19 +258,15 @@ function ws_adjust(mysqli $conn, int $shift_id, string $station_code, int $dGood
 function hourly_adjust(mysqli $conn, int $dGood, int $dNg): void {
     $label = date('g A');
     $today = date('Y-m-d');
-    db_run($conn, "DELETE FROM supervisor_hourly_output WHERE log_date IS NULL OR log_date <> ?", "s", [$today]);
-    $row = db_one($conn,
-        "SELECT id FROM supervisor_hourly_output WHERE hour_label = ? AND log_date = ? LIMIT 1",
-        "ss", [$label, $today]);
-    if ($row) {
-        db_run($conn,
-            "UPDATE supervisor_hourly_output SET good_units = good_units + ?, ng_units = ng_units + ? WHERE id = ?",
-            "iii", [$dGood, $dNg, (int)$row['id']]);
-    } else {
-        db_run($conn,
-            "INSERT INTO supervisor_hourly_output (hour_label, good_units, ng_units, log_date) VALUES (?, ?, ?, ?)",
-            "siis", [$label, $dGood, $dNg, $today]);
-    }
+    $line = get_line_session($conn);
+    if (!$line || $line['status'] !== 'RUNNING') return;
+    db_run($conn,
+        "INSERT INTO supervisor_hourly_output (session_id, hour_label, good_units, ng_units, log_date)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            good_units = good_units + VALUES(good_units),
+            ng_units = ng_units + VALUES(ng_units)",
+        "isiis", [(int)$line['id'], $label, $dGood, $dNg, $today]);
 }
 
 /**

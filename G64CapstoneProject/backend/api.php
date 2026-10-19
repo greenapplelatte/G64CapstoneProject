@@ -67,6 +67,7 @@ if ($action === 'get_metrics') {
     $total      = $session['good_count'] + $session['ng_count'];
     $progress   = $session['target_goal'] > 0 ? round(($session['good_count'] / $session['target_goal']) * 100, 2) : 0;
     $yield_rate = $total > 0 ? round(($session['good_count'] / $total) * 100, 2) : 0;
+    $countBlockReason = counting_block_reason($conn, $session['machine_id']);
 
     json_out([
         'status' => 'success',
@@ -80,6 +81,8 @@ if ($action === 'get_metrics') {
             'yield_rate'     => $yield_rate,
             'session_status' => $session['status'],
             'device_online'  => station_is_online($conn, $session['machine_id']),
+            'counting_available' => $countBlockReason === null,
+            'counting_block_reason' => $countBlockReason,
             'last_seen'      => (db_one($conn, "SELECT last_seen FROM master_stations WHERE station_code = ?", "s", [$session['machine_id']])['last_seen'] ?? null)
         ]
     ]);
@@ -94,7 +97,11 @@ if ($action === 'log_count') {
     if (!in_array($type, ['good', 'ng'], true)) {
         json_out(['status' => 'error', 'message' => "type must be 'good' or 'ng'"], 400);
     }
-    $qty = max(1, min(100, intval($_POST['qty'] ?? 1)));
+    $rawQty = $_POST['qty'] ?? '';
+    $qty = filter_var($rawQty, FILTER_VALIDATE_INT);
+    if ($qty === false || $qty === null || $qty < 1 || $qty > 100) {
+        json_out(['status' => 'error', 'message' => 'Quantity must be a whole number between 1 and 100.'], 400);
+    }
 
     $station = trim($_POST['station_code'] ?? '');
     if ($station === '') {
@@ -144,8 +151,8 @@ if ($action === 'log_count') {
         if ($type === 'ng') {
             $detail = "NG recorded: $qty unit(s)" . ($defect !== '' ? " ($defect)" : '');
             log_activity($conn, $station, 'Defect', $detail);
-        } elseif (((int)$ps['good_count']) % 10 === 0) {
-            log_activity($conn, $station, 'Count', "Count milestone: " . (int)$ps['good_count'] . " good units");
+        } else {
+            log_activity($conn, $station, 'Count', "Count logged: +$qty good unit(s)");
         }
 
         $conn->commit();

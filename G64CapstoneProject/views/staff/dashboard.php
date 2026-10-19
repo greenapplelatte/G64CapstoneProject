@@ -5,8 +5,11 @@ require_once __DIR__ . '/../../includes/functions.php';
 
 // Authorize access strictly for Staff role
 check_role('staff');
-$staffContext = db_one($conn, "SELECT assigned_station FROM users WHERE id = ?", "i", [(int)$_SESSION['user_id']]);
+$staffContext = db_one($conn, "SELECT u.assigned_station, s.line_name FROM users u
+                               LEFT JOIN master_stations s ON s.station_code = u.assigned_station
+                               WHERE u.id = ?", "i", [(int)$_SESSION['user_id']]);
 $staffStation = trim($staffContext['assigned_station'] ?? '');
+$staffLine = trim($staffContext['line_name'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -183,6 +186,18 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
             color: var(--text-secondary);
         }
 
+        .simulator-bar form { display: flex; align-items: center; gap: 10px; }
+        .simulator-bar label { color: var(--text-secondary); font-size: 0.8rem; }
+        .simulator-bar input[type="number"] {
+            width: 86px;
+            padding: 8px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            background: #161b22;
+            color: var(--text-primary);
+        }
+        .simulator-bar button:disabled { opacity: 0.55; cursor: not-allowed; }
+
         .btn-group {
             display: flex;
             gap: 10px;
@@ -212,6 +227,8 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
             padding-top: 20px;
         }
 
+        #hourly-chart { overflow-x:auto; justify-content:flex-start; gap:16px; }
+        .bar-group { flex:0 0 58px; }
         .bar-group {
             display: flex;
             flex-direction: column;
@@ -269,10 +286,14 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
         @media (max-width: 1024px) {
             .grid-top { grid-template-columns: repeat(2, 1fr); }
             .grid-main { grid-template-columns: 1fr; }
+            .simulator-bar { align-items: flex-start; flex-direction: column; gap: 12px; }
+            .simulator-bar form { flex-wrap: wrap; }
         }
     </style>
+    <!-- Staff-only theme; all existing JS/PHP processes remain unchanged -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/staff-theme.css?v=1">
 </head>
-<body>
+<body class="staff-theme">
 
     <!-- Shared Filtered Sidebar -->
     <?php include_once __DIR__ . '/../../includes/sidebar.php'; ?>
@@ -286,10 +307,25 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
                 <p class="subtitle">Live machine status, unit counters and real-time production for your station.</p>
             </div>
             <div class="time-area">
+                <div id="live-updated" style="color:#7ee787;font-size:.73rem;margin-bottom:4px" role="status">Connecting to live data…</div>
                 <div id="current-datetime"><?= date('M d, Y · h:i A'); ?></div>
-                <div style="color:var(--text-secondary)" id="station-id">Station <?= htmlspecialchars($staffStation !== '' ? $staffStation : 'Not assigned', ENT_QUOTES); ?></div>
+                <div style="color:var(--text-secondary)" id="station-id">Station <?= htmlspecialchars($staffStation !== '' ? $staffStation . ($staffLine !== '' ? ' · ' . $staffLine : '') : 'Not assigned', ENT_QUOTES); ?></div>
             </div>
         </header>
+
+        <section class="simulator-bar" aria-labelledby="counter-heading">
+            <div>
+                <h4 id="counter-heading">SOFTWARE PRODUCTION COUNTER</h4>
+                <p id="counting-status" class="metric-sub">Good-unit counts are recorded against your assigned station.</p>
+            </div>
+            <form id="manual-count-form">
+                <label for="count-quantity">Good units</label>
+                <input type="number" id="count-quantity" name="qty" min="1" max="100" value="1" required>
+                <input type="hidden" name="type" value="good">
+                <input type="hidden" name="station_code" value="<?= htmlspecialchars($staffStation, ENT_QUOTES); ?>">
+                <button class="btn btn-good" type="submit" id="count-submit" <?= $staffStation === '' ? 'disabled' : '' ?>>ADD GOOD UNITS</button>
+            </form>
+        </section>
 
         <!-- Top Cards Metrics -->
         <section class="grid-top">
@@ -313,9 +349,9 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
 
             <div class="card status-card">
                 <div class="status-indicator">
-                    <span class="dot"></span> <span id="hw-status">HARDWARE ONLINE</span>
+                    <span class="dot"></span> <span id="hw-status">COUNTER STATUS</span>
                 </div>
-                <div id="hardware-detail" style="margin-top:15px; font-size:0.8rem; color:var(--text-secondary)">Checking device connection…</div>
+                <div id="hardware-detail" style="margin-top:15px; font-size:0.8rem; color:var(--text-secondary)">Checking production session…</div>
             </div>
         </section>
 
@@ -330,7 +366,7 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
                         <span style="color:var(--brand-orange)">■ NG</span>
                     </div>
                 </div>
-                <div class="bars-container" id="hourly-chart"><p style="color:var(--text-secondary);font-size:.85rem">Hourly station-level data is not available yet.</p>
+                <div class="bars-container" id="hourly-chart"><p style="color:var(--text-secondary);font-size:.85rem">Loading hourly station production…</p>
                 </div>
             </div>
 
@@ -339,7 +375,7 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
                 <div class="card-title">Defects By Category</div>
                 <div id="category-list"><p style="color:var(--text-secondary);font-size:.85rem">Loading confirmed defects…</p></div>
                 <div style="margin-top:20px; font-size:0.85rem; display:flex; justify-content:space-between;">
-                    <span>Total rejected</span>
+                    <span>Confirmed rejected units today</span>
                     <strong id="total-rejected">0</strong>
                 </div>
             </div>
@@ -366,6 +402,7 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
 
     <!-- AJAX Logic and Live API Integrations -->
 <script>const BASE_URL = <?= json_encode(BASE_URL); ?>;</script>
-<script src="<?= BASE_URL ?>/assets/js/dashboard.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/dashboard-common.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/dashboard-staff.js?v=2"></script>
 </body>
 </html>

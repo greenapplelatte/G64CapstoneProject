@@ -8,8 +8,20 @@ require_once __DIR__ . '/../config/database.php';   // also starts the session
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-require_post();
+$action = $_GET['action'] ?? '';
+if ($action === 'get_lines') {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        json_out(['status'=>'error','message'=>'GET request required.'], 405);
+    }
+    try {
+        json_out(['status'=>'success','lines'=>db_all($conn, 'SELECT line_name FROM master_lines ORDER BY line_name')]);
+    } catch (mysqli_sql_exception $e) {
+        error_log('Access-request line lookup failed: ' . $e->getMessage());
+        json_out(['status'=>'error','message'=>'Production lines are unavailable. Ask a manager to update Master Data.'], 503);
+    }
+}
 
+require_post();
 csrf_verify();
 
 // Bots fill hidden fields. Pretend it worked.
@@ -44,7 +56,7 @@ if (!preg_match('/^[a-zA-Z0-9_.-]{3,50}$/', $username)) {
 if (!in_array($role, ['Operator', 'Supervisor'], true)) {   // managers are never self-requested
     json_out(['status' => 'error', 'message' => 'Please choose a role.'], 400);
 }
-if (!in_array($line, ['Line 1', 'Line 2', 'Line 3'], true)) {
+if ($line === '' || !db_one($conn, 'SELECT id FROM master_lines WHERE line_name = ?', 's', [$line])) {
     json_out(['status' => 'error', 'message' => 'Please choose a line.'], 400);
 }
 

@@ -12,19 +12,26 @@ try {
     $totals = db_one(
         $conn,
         "SELECT
-            COALESCE(SUM(good_count), 0) AS good_units,
-            COALESCE(SUM(ng_count), 0) AS ng_units
-         FROM production_sessions"
+            COALESCE(SUM(ps.good_count), 0) AS good_units,
+            COALESCE(SUM(ps.ng_count), 0) AS ng_units
+         FROM production_sessions ps
+         JOIN (
+            SELECT machine_id, MAX(id) AS latest_id
+            FROM production_sessions
+            GROUP BY machine_id
+         ) latest ON latest.latest_id = ps.id"
     );
 
     $good = (int) ($totals['good_units'] ?? 0);
     $ng = (int) ($totals['ng_units'] ?? 0);
     $total = $good + $ng;
+    $target = db_one($conn, "SELECT oee_target_pct FROM master_target_defaults ORDER BY id ASC LIMIT 1");
 
     $metrics = [
         'overall_oee' => null,
         'availability' => null,
         'performance' => null,
+        'oee_target_pct' => (float)($target['oee_target_pct'] ?? 85.0),
         'quality' => $total > 0
             ? round(($good / $total) * 100, 1)
             : null,
@@ -38,6 +45,8 @@ try {
         "SELECT
             COALESCE(ms.line_name, 'Unassigned line')
                 AS line_name,
+            SUM(ps.good_count) AS good_units,
+            SUM(ps.ng_count) AS ng_units,
             SUM(ps.good_count + ps.ng_count)
                 AS total_output,
             CASE
@@ -50,11 +59,24 @@ try {
                 ELSE NULL
             END AS quality
          FROM production_sessions ps
-         LEFT JOIN master_stations ms
-            ON ms.station_code = ps.machine_id
+         JOIN (
+            SELECT machine_id, MAX(id) AS latest_id
+            FROM production_sessions
+            GROUP BY machine_id
+         ) latest ON latest.latest_id = ps.id
+         LEFT JOIN master_stations ms ON ms.station_code = ps.machine_id
          GROUP BY COALESCE(ms.line_name, 'Unassigned line')
          ORDER BY line_name"
     );
+    $lineOutput = array_sum(array_map(static fn($line) => (int)$line['total_output'], $lines));
+    foreach ($lines as &$line) {
+        $line['share_pct'] = ($lineOutput > 0 ? number_format((int)$line['total_output'] / $lineOutput * 100, 1) : '0.0') . '% of latest-session output';
+        $line['availability'] = null;
+        $line['performance'] = null;
+        $line['oee'] = null;
+        $line['is_lowest'] = 0;
+    }
+    unset($line);
 
     echo json_encode([
         'status' => 'success',
@@ -62,7 +84,7 @@ try {
         'lines' => $lines,
         'defects' => [],
         'weekly' => [],
-        'period' => 'All recorded production sessions'
+        'period' => 'Latest production session per station'
     ]);
 
 } catch (Throwable $e) {

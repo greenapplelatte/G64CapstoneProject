@@ -50,9 +50,9 @@ if (count($name_parts) > 1) {
             <!-- Left Profile Card -->
             <div class="card">
                 <div class="profile-avatar-container">
-                    <div class="avatar-large"><?= htmlspecialchars($initials); ?></div>
+                    <div class="avatar-large" id="profile-avatar-large"><?= htmlspecialchars($initials); ?></div>
                     <div class="profile-name" id="display-fullname"><?= htmlspecialchars($full_name); ?></div>
-                    <div class="profile-role">Supervisor · Floor Operations</div>
+                    <div class="profile-role">Supervisor · <span id="profile-department-display"><?= htmlspecialchars($_SESSION['department'] ?? 'Not set'); ?></span></div>
                     <span class="shift-badge" id="shift-badge">SHIFT STATUS UNAVAILABLE</span>
                     
                 </div>
@@ -83,8 +83,7 @@ if (count($name_parts) > 1) {
                                 <div class="form-group">
                                     <label>Full name</label>
                                     <div class="input-wrapper">
-                                        <input type="text" id="input-fullname" class="form-control" readonly>
-                                        <span class="lock-icon">🔒</span>
+                                        <input type="text" id="input-fullname" name="full_name" class="form-control" required minlength="2" maxlength="100" autocomplete="name">
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -100,8 +99,7 @@ if (count($name_parts) > 1) {
                                 <div class="form-group">
                                     <label>Department</label>
                                     <div class="input-wrapper">
-                                        <input type="text" id="input-dept" class="form-control" readonly>
-                                        <span class="lock-icon">🔒</span>
+                                        <input type="text" id="input-dept" name="department" class="form-control" required minlength="2" maxlength="100">
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -111,8 +109,9 @@ if (count($name_parts) > 1) {
                             </div>
 
                             <div class="form-action-row">
-                                <span class="helper-text">🔒 Locked fields can only be changed by system administration.</span>
-                                <button type="submit" class="btn-save-yellow">SAVE CHANGES</button>
+                                <span class="helper-text">🔒 Employee ID is managed by the administrator.</span>
+                                <span id="profile-save-status" role="status" aria-live="polite" style="font-size:13px;color:#64748b">Changes save automatically</span>
+                                <button type="submit" class="btn-save-yellow">SAVE NOW</button>
                             </div>
                         </form>
                     </div>
@@ -186,19 +185,81 @@ if (count($name_parts) > 1) {
         document.addEventListener("DOMContentLoaded", () => {
             loadProfileData();
 
-            // Account Details Form
-            document.getElementById("accountForm").addEventListener("submit", function(e) {
-                e.preventDefault();
-                let formData = new FormData(this);
-
-                fetch(BASE_URL + "/backend/process_supervisor_profile.php?action=update_account", {
-                    method: "POST",
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => alert(data.message))
-                .catch(err => { alert('Unable to update account details. Check your connection.'); console.error("Error updating account:", err); });
+            // Profile autosave: debounce typing; serialize requests to prevent stale overwrites.
+            const accountForm = document.getElementById('accountForm');
+            const saveStatus = document.getElementById('profile-save-status');
+            let saveTimer;
+            let saveActive = false;
+            let saveQueued = false;
+            let loadedProfile = false;
+            let lastSaved = '';
+            const getSnapshot = () => JSON.stringify([
+                accountForm.elements.full_name.value.trim(),
+                accountForm.elements.department.value.trim(),
+                accountForm.elements.contact_number.value.trim()
+            ]);
+            async function saveAccount() {
+                clearTimeout(saveTimer);
+                if (!loadedProfile || getSnapshot() === lastSaved) return;
+                if (!accountForm.reportValidity()) {
+                    saveStatus.textContent = 'Check the highlighted fields before saving.';
+                    saveStatus.style.color = '#b91c1c';
+                    return;
+                }
+                if (saveActive) { saveQueued = true; return; }
+                saveActive = true;
+                const snapshot = getSnapshot();
+                saveStatus.textContent = 'Saving…';
+                saveStatus.style.color = '#64748b';
+                try {
+                    const payload = new FormData(accountForm);
+                    const response = await fetch(BASE_URL + '/backend/process_supervisor_profile.php?action=update_account', {
+                        method: 'POST', body: payload
+                    });
+                    const result = await response.json();
+                    if (!response.ok || result.status !== 'success') throw Error(result.message || 'Unable to save');
+                    lastSaved = snapshot;
+                    const savedName = result.data?.full_name || accountForm.elements.full_name.value.trim();
+                    const savedDepartment = result.data?.department || accountForm.elements.department.value.trim();
+                    document.getElementById('display-fullname').textContent = savedName;
+                    const deptNode = document.getElementById('profile-department-display');
+                    if (deptNode) deptNode.textContent = savedDepartment;
+                    const avatarNode = document.getElementById('profile-avatar-large');
+                    if (avatarNode) {
+                        const nameParts = savedName.split(/\s+/).filter(Boolean);
+                        avatarNode.textContent = nameParts.length
+                            ? (nameParts[0][0] + (nameParts.length > 1 ? nameParts[nameParts.length - 1][0] : '')).toUpperCase()
+                            : 'U';
+                    }
+                    window.dispatchEvent(new CustomEvent('profile:updated', {
+                        detail: { full_name: savedName, department: savedDepartment }
+                    }));
+                    saveStatus.textContent = 'All changes saved';
+                    saveStatus.style.color = '#15803d';
+                } catch (err) {
+                    saveStatus.textContent = err.message || 'Save failed. Click SAVE NOW to retry.';
+                    saveStatus.style.color = '#b91c1c';
+                } finally {
+                    saveActive = false;
+                    if (saveQueued || (getSnapshot() !== lastSaved && snapshot !== getSnapshot())) {
+                        saveQueued = false;
+                        saveTimer = setTimeout(saveAccount, 400);
+                    }
+                }
+            }
+            window.profileMarkLoaded = () => { loadedProfile = true; lastSaved = getSnapshot(); };
+            ['full_name', 'department', 'contact_number'].forEach(name => {
+                const input = accountForm.elements[name];
+                input.addEventListener('input', () => {
+                    clearTimeout(saveTimer);
+                    saveStatus.textContent = 'Unsaved changes…';
+                    saveStatus.style.color = '#64748b';
+                    saveTimer = setTimeout(saveAccount, 850);
+                });
+                input.addEventListener('change', () => { clearTimeout(saveTimer); saveAccount(); });
+                input.addEventListener('blur', () => { clearTimeout(saveTimer); saveAccount(); });
             });
+            accountForm.addEventListener('submit', e => { e.preventDefault(); saveAccount(); });
 
             // Password Change Form
             document.getElementById("passwordForm").addEventListener("submit", function(e) {
@@ -233,6 +294,7 @@ if (count($name_parts) > 1) {
                         document.getElementById("input-empid").value = d.employee_id || 'Not set';
                         document.getElementById("input-dept").value = d.department || 'Not set';
                         document.getElementById("input-contact").value = d.contact_number || '';
+                        if (window.profileMarkLoaded) window.profileMarkLoaded();
                         
                         document.getElementById("header-station-code").innerText = d.assigned_station || 'Not assigned';
                         document.getElementById("meta-station").innerText = d.assigned_station || 'Not assigned';
@@ -255,7 +317,12 @@ if (count($name_parts) > 1) {
                 body: formData
             })
             .then(res => res.json())
-            .then(data => console.log("Preferences saved"))
+            .then(data => {
+                alert(data.message);
+                if (data.status === 'success') {
+                    loadProfileData(); // Reload profile data to reflect changes
+                }
+            })
             .catch(err => console.error("Error saving preferences:", err));
         }
     </script>

@@ -99,6 +99,16 @@ body {
     padding: 20px;
 }
 
+.master-data-error {
+    margin-bottom: 15px;
+    padding: 12px 14px;
+    border: 1px solid var(--accent-red);
+    border-radius: 6px;
+    background: rgba(248, 81, 73, 0.12);
+    color: #ffb4ae;
+    font-size: 0.85rem;
+}
+
 /* Form Styles */
 .form-row {
     display: grid;
@@ -170,33 +180,6 @@ textarea.form-control {
     background: var(--accent-red);
     border-color: var(--accent-red);
     color: #fff;
-}
-
-/* Image Attachment Box */
-.photo-upload-box {
-    border: 1px dashed var(--card-border);
-    border-radius: 6px;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #161b22;
-    margin-bottom: 15px;
-}
-
-.photo-upload-box span {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.btn-attach {
-    background: #30363d;
-    color: var(--text-primary);
-    border: 1px solid #8b949e;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
 }
 
 /* Form Actions */

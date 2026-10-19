@@ -28,10 +28,17 @@ function csrf_meta(): string {
  *   - assets/js/main.js (esc() and other shared helpers)
  */
 function head_assets(): string {
-    return csrf_meta() . "\n"
+    $brand_icon = BASE_URL . '/assets/images/mve-brand.svg?v=2';
+    $escaped_brand_icon = htmlspecialchars($brand_icon, ENT_QUOTES);
+    return '<link rel="icon" type="image/svg+xml" sizes="any" href="' . $escaped_brand_icon . '">' . "\n"
+         . '<link rel="shortcut icon" type="image/svg+xml" href="' . $escaped_brand_icon . '">' . "\n"
+         . '<meta name="theme-color" content="#111827">' . "\n"
+         . csrf_meta() . "\n"
          . '    <script>window.BASE_URL = ' . json_encode(BASE_URL) . ';</script>' . "\n"
+         . '    <link rel="stylesheet" href="' . BASE_URL . '/assets/css/system-dialogs.css">' . "\n"
          . '    <script src="' . BASE_URL . '/assets/js/csrf.js"></script>' . "\n"
-         . '    <script src="' . BASE_URL . '/assets/js/main.js"></script>';
+         . '    <script src="' . BASE_URL . '/assets/js/main.js"></script>' . "\n"
+         . '    <script src="' . BASE_URL . '/assets/js/system-dialogs.js"></script>';
 }
 
 function csrf_field(): string {

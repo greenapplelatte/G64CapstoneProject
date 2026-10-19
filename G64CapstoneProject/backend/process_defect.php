@@ -20,7 +20,6 @@ if ($action === 'submit_report') {
     $notes           = trim($_POST['notes'] ?? '');
     $reported_by     = $_SESSION['full_name'] ?? 'Staff';
     $report_time     = date('H:i:s');
-    $image_path      = null;
 
     if ($project_type === '' || $workstation === '' || $defect_category === '') {
         json_out(['status' => 'error', 'message' => 'Choose a project, workstation, and defect category.'], 400);
@@ -28,10 +27,17 @@ if ($action === 'submit_report') {
     if ($defect_category === '') {
         json_out(['status' => 'error', 'message' => 'Please choose a defect category.'], 400);
     }
-    $validCategory = db_one($conn, "SELECT id FROM defect_categories WHERE category_name = ? LIMIT 1", "s", [$defect_category]);
-    $validProject = db_one($conn, "SELECT id FROM master_project_types WHERE project_type = ? AND is_active = 1 LIMIT 1", "s", [$project_type]);
+    try {
+        $validCategory = db_one($conn, "SELECT id FROM defect_categories WHERE category_name = ? LIMIT 1", "s", [$defect_category]);
+        $validProject = db_one($conn, "SELECT id FROM master_project_types WHERE project_type = ? AND is_active = 1 LIMIT 1", "s", [$project_type]);
+        $validWorkstation = db_one($conn, "SELECT id FROM master_workstations WHERE workstation_name = ? AND is_active = 1 LIMIT 1", "s", [$workstation]);
+    } catch (mysqli_sql_exception $e) {
+        error_log('Defect report master data schema error: ' . $e->getMessage());
+        json_out(['status' => 'error', 'message' => 'Master Data needs a database update. Ask a manager to import config/database.sql, then try again.'], 503);
+    }
     if (!$validCategory) json_out(['status' => 'error', 'message' => 'Choose a valid defect category from the list.'], 400);
     if (!$validProject) json_out(['status' => 'error', 'message' => 'Choose a valid project type from the list.'], 400);
+    if (!$validWorkstation) json_out(['status' => 'error', 'message' => 'Choose an active workstation from the list.'], 400);
     if ($quantity < 1 || $quantity > 1000) {
         json_out(['status' => 'error', 'message' => 'Quantity must be between 1 and 1000.'], 400);
     }
@@ -50,46 +56,16 @@ if ($action === 'submit_report') {
         json_out(['status' => 'error', 'message' => 'No valid station is assigned to your account. Contact your supervisor before submitting a report.'], 409);
     }
 
-    $stationRow = db_one($conn, "SELECT workstation_name FROM master_stations WHERE station_code = ?", "s", [$station]);
-    if (!$stationRow || $workstation !== $stationRow['workstation_name']) {
-        json_out(['status' => 'error', 'message' => 'The selected workstation does not match your assigned station. Refresh the page and try again.'], 400);
-    }
-
-    // Optional photo: images only, max 5 MB, random server-side file name
-    $saved_file = null;
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
-        if ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
-            json_out(['status' => 'error', 'message' => 'Photo upload failed. Please try again.'], 400);
-        }
-        if ($_FILES['photo']['size'] > 5 * 1024 * 1024) {
-            json_out(['status' => 'error', 'message' => 'Photo is too large (max 5 MB).'], 400);
-        }
-        $info = @getimagesize($_FILES['photo']['tmp_name']);
-        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        if (!$info || !isset($allowed[$info['mime']])) {
-            json_out(['status' => 'error', 'message' => 'Only JPG, PNG or WEBP photos are allowed.'], 400);
-        }
-        $upload_dir = __DIR__ . '/../uploads/defects/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        $filename = time() . '_' . bin2hex(random_bytes(6)) . '.' . $allowed[$info['mime']];
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $upload_dir . $filename)) {
-            $saved_file = $upload_dir . $filename;
-            $image_path = 'uploads/defects/' . $filename;
-        }
-    }
-
     try {
         $conn->begin_transaction();
 
         // Saved as Pending. NG counts are NOT changed here; they change only when a supervisor confirms.
         db_run($conn,
             "INSERT INTO defect_reports
-                (project_type, workstation, station, defect_category, quantity_rejected, severity, notes, image_path, reported_by, reported_by_id, report_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            "ssssissssis",
-            [$project_type, $workstation, $station, $defect_category, $quantity, $severity, $notes, $image_path, $reported_by, $user_id, $report_time]);
+                (project_type, workstation, station, defect_category, quantity_rejected, severity, notes, reported_by, reported_by_id, report_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "ssssisssis",
+            [$project_type, $workstation, $station, $defect_category, $quantity, $severity, $notes, $reported_by, $user_id, $report_time]);
 
         // The units are shown as "pending review" on the open shift until the supervisor decides
         $shift = get_open_shift($conn);
@@ -103,12 +79,9 @@ if ($action === 'submit_report') {
         log_activity($conn, (string)$station, 'Defect', "Defect report submitted: $defect_category ($quantity unit(s))", $user_id);
 
         $conn->commit();
-        json_out(['status' => 'success', 'message' => 'Defect report submitted successfully.']);
+        json_out(['status' => 'success', 'message' => 'Defect report submitted and sent to the supervisor review queue.']);
     } catch (Throwable $e) {
         $conn->rollback();
-        if ($saved_file && is_file($saved_file)) {
-            unlink($saved_file);
-        }
         json_out(['status' => 'error', 'message' => 'Failed to save defect report.'], 500);
     }
 }
@@ -117,17 +90,13 @@ if ($action === 'cancel_report') {
     require_post();
     $reportId = (int)($_POST['report_id'] ?? 0);
     if ($reportId < 1) json_out(['status'=>'error','message'=>'Invalid report.'], 400);
-    $report = db_one($conn, "SELECT id, station, quantity_rejected, image_path FROM defect_reports WHERE id = ? AND reported_by_id = ? AND status = 'Pending' LIMIT 1", 'ii', [$reportId, $user_id]);
+    $report = db_one($conn, "SELECT id, station, quantity_rejected FROM defect_reports WHERE id = ? AND reported_by_id = ? AND status = 'Pending' LIMIT 1", 'ii', [$reportId, $user_id]);
     if (!$report) json_out(['status'=>'error','message'=>'Only your own pending reports can be cancelled.'], 409);
     try {
         $conn->begin_transaction();
         db_run($conn, "DELETE FROM defect_reports WHERE id = ? AND reported_by_id = ? AND status = 'Pending'", 'ii', [$reportId, $user_id]);
         $shift = get_open_shift($conn);
         if ($shift) ws_adjust($conn, (int)$shift['id'], (string)$report['station'], 0, 0, -(int)$report['quantity_rejected']);
-        if (!empty($report['image_path'])) {
-            $imageFile = __DIR__ . '/../' . ltrim($report['image_path'], '/');
-            if (is_file($imageFile) && strpos(realpath($imageFile), realpath(__DIR__ . '/../uploads/defects/')) === 0) @unlink($imageFile);
-        }
         log_activity($conn, (string)$report['station'], 'Defect', 'Pending defect report cancelled', $user_id);
         $conn->commit();
         json_out(['status'=>'success','message'=>'Pending defect report cancelled.']);
@@ -147,7 +116,7 @@ if ($action === 'get_reports') {
     FROM defect_reports WHERE reported_by_id = ? AND DATE(created_at) = CURDATE()", "i", [$user_id]);
 
     // Recent reports
-    $reports = db_all($conn, "SELECT id, project_type, workstation, defect_category, quantity_rejected, severity, notes, image_path, status, supervisor_comment, report_time, created_at FROM defect_reports WHERE reported_by_id = ? ORDER BY id DESC LIMIT 10", "i", [$user_id]);
+    $reports = db_all($conn, "SELECT id, project_type, workstation, defect_category, quantity_rejected, severity, notes, status, supervisor_comment, report_time, created_at FROM defect_reports WHERE reported_by_id = ? ORDER BY id DESC LIMIT 10", "i", [$user_id]);
 
     json_out([
         'status'  => 'success',

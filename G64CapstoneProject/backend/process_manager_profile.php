@@ -6,7 +6,12 @@ require_once __DIR__ . '/../includes/auth.php';
 
 check_role('manager');
 
-$user_id = $_SESSION['user_id'] ?? 1;
+$user_id = (int) ($_SESSION['user_id'] ?? 0);
+if ($user_id <= 0) {
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Session expired. Please log in again.']);
+    exit;
+}
 $action  = $_GET['action'] ?? '';
 
 // Fetch Manager Profile Info
@@ -21,20 +26,43 @@ if ($action === 'get_profile') {
     exit;
 }
 
-// Update Contact Details
+// Update editable account details for the logged-in manager.
 if ($action === 'update_account') {
     require_post();
-    $contact = $_POST['contact_number'] ?? '';
 
-    $stmt = $conn->prepare("UPDATE users SET contact_number = ? WHERE id = ?");
-    $stmt->bind_param("si", $contact, $user_id);
+    $name = trim((string) ($_POST['full_name'] ?? ''));
+    $department = trim((string) ($_POST['department'] ?? ''));
+    $contact = trim((string) ($_POST['contact_number'] ?? ''));
 
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Account details saved successfully.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to update contact details.']);
+    if (mb_strlen($name) < 2 || mb_strlen($name) > 100 ||
+        mb_strlen($department) < 2 || mb_strlen($department) > 100 ||
+        mb_strlen($contact) > 30) {
+        http_response_code(422);
+        echo json_encode(['status' => 'error', 'message' => 'Please enter a valid name, department, and contact number.']);
+        exit;
+    }
+
+    $stmt = $conn->prepare('UPDATE users SET full_name = ?, department = ?, contact_number = ? WHERE id = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Cannot prepare profile update.']);
+        exit;
+    }
+    $stmt->bind_param('sssi', $name, $department, $contact, $user_id);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to save account details.']);
+        exit;
     }
     $stmt->close();
+    $_SESSION['full_name'] = $name;
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Account details saved successfully.',
+        'data' => ['full_name' => $name, 'department' => $department, 'contact_number' => $contact]
+    ]);
     exit;
 }
 

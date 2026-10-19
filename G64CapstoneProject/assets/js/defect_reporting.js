@@ -28,20 +28,8 @@ function selectSeverity(val) {
     document.getElementById('severity_val').value = val;
     document.querySelectorAll('.btn-severity').forEach(btn => btn.classList.toggle('active', btn.dataset.val === val));
 }
-function handleFileSelect(input) {
-    const preview = document.getElementById('photo-preview');
-    const label = document.getElementById('photo-filename');
-    if (!input.files || !input.files[0]) { preview.style.display = 'none'; preview.removeAttribute('src'); label.textContent = '📷 Add a photo of the defective unit'; return; }
-    const file = input.files[0];
-    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-        input.value = ''; showMessage('Choose a JPG, PNG, or WEBP image no larger than 5 MB.', 'error'); return;
-    }
-    label.textContent = `📷 ${file.name}`; preview.src = URL.createObjectURL(file); preview.style.display = 'block';
-}
 function resetForm() {
     const form = document.getElementById('defectForm'); form.reset(); selectSeverity('Major');
-    const preview = document.getElementById('photo-preview'); if (preview) { if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src); preview.removeAttribute('src'); preview.style.display = 'none'; }
-    const label = document.getElementById('photo-filename'); if (label) label.textContent = '📷 Add a photo of the defective unit';
 }
 async function loadReportsData() {
     try {
@@ -65,7 +53,7 @@ function renderRecentList(reports) {
 }
 
 async function cancelReport(reportId) {
-    if (!window.confirm('Cancel this pending defect report?')) return;
+    if (!await window.systemConfirm('Cancel this pending defect report?', 'Cancel defect report')) return;
     const body = new FormData(); body.append('report_id', String(reportId));
     try { const response = await fetch(`${BASE_URL}/backend/process_defect.php?action=cancel_report`, {method:'POST',body,headers:{'Accept':'application/json'}}); const data = await response.json(); if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Unable to cancel report.'); showMessage(data.message, 'success'); await loadReportsData(); }
     catch (error) { showMessage(error.message || 'Network error. Please try again.', 'error'); }

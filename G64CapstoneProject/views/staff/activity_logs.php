@@ -18,8 +18,10 @@ $staffStation = trim($staffContext['assigned_station'] ?? '');
     <!-- Shared Sidebar & CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/sidebar.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/activity_logs.css">
+    <!-- Staff-only theme; all existing JS/PHP processes remain unchanged -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/staff-theme.css?v=1">
 </head>
-<body>
+<body class="staff-theme">
 
     <!-- Shared Role-Filtered Sidebar -->
     <?php include_once __DIR__ . '/../../includes/sidebar.php'; ?>

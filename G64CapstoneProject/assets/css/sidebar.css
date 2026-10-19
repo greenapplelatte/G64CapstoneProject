@@ -26,18 +26,32 @@
 
 .brand {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 10px;
     margin-bottom: 25px;
+    min-height: 42px;
 }
 
-.brand-logo {
-    background: var(--brand-accent);
-    color: #ffffff;
-    font-weight: bold;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 1rem;
+.brand-mark {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.brand-mark svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.brand-info {
+    min-width: 0;
+    line-height: 1.2;
 }
 
 .brand-info strong {

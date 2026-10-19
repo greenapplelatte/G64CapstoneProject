@@ -45,7 +45,7 @@ check_role('manager');
             </div>
             <div class="stat-card">
                 <label>PENDING REQUESTS</label>
-                <div class="stat-val" style="color: var(--accent-yellow);" id="stat-pending">2</div>
+                <div class="stat-val" style="color: var(--accent-yellow);" id="stat-pending">0</div>
             </div>
             <div class="stat-card">
                 <label>DISABLED</label>
@@ -110,7 +110,7 @@ check_role('manager');
                 <div class="card">
                     <div class="card-header-bar header-blue">
                         <span>ACCESS REQUESTS</span>
-                        <span style="background:var(--brand-orange); color:#000; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:0.75rem;" id="req-badge">2</span>
+                        <span style="background:var(--brand-orange); color:#000; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:0.75rem; display:none;" id="req-badge">0</span>
                     </div>
                     <div class="card-body" id="requests-list">
                         <!-- Populated dynamically via JS -->
@@ -138,11 +138,7 @@ check_role('manager');
 
                             <div class="form-group-um">
                                 <label>Assignment</label>
-                                <select name="assignment" class="form-control-um">
-                                    <option value="">No assignment</option>
-                                    <option value="Line 2">Line 2</option>
-                                    <option value="Line 3">Line 3</option>
-                                </select>
+                                <select name="assignment" id="assignment-select" class="form-control-um"></select>
                             </div>
 
                             <div class="form-group-um" id="station-group">
@@ -228,10 +224,32 @@ check_role('manager');
         </section>
     </main>
 
+    <!-- Secure account deactivation confirmation -->
+    <div id="deactivate-modal" role="dialog" aria-modal="true" aria-labelledby="deactivate-title" hidden style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;">
+      <div style="width:100%;max-width:430px;border:1px solid #3d4856;background:#20262d;color:#f3f4f6;border-radius:14px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.4)">
+        <h2 id="deactivate-title" style="margin:0 0 10px;font-size:20px">Deactivate account</h2>
+        <p id="deactivate-summary" style="color:#cbd5e1;line-height:1.5"></p>
+        <p style="font-size:13px;color:#f2c663">Account access will be updated without deleting production history. Your manager password is required.</p>
+        <form id="deactivate-form">
+          <label for="deactivate-password" style="display:block;margin-bottom:7px">Your manager password</label>
+          <input type="password" id="deactivate-password" autocomplete="current-password" required class="form-control-um" style="width:100%;box-sizing:border-box" />
+          <p id="deactivate-error" role="alert" style="color:#ff8e88;font-size:13px" hidden></p>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px">
+            <button type="button" id="deactivate-cancel" class="btn-edit-user">Cancel</button>
+            <button type="submit" id="deactivate-submit" class="btn-edit-user" style="background:#b42318;color:white">Deactivate account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Inline Logic -->
     <script>
         let allUsers = [];
         let allStations = [];
+        let allLines = [];
+        const CURRENT_USER_ID = <?= (int)($_SESSION['user_id'] ?? 0) ?>;
+        let selectedDeactivateId = null;
+        let pendingAccountAction = null;
 
         function stationsForLine(line) {
             return allStations.filter(st => st.line_name === line);
@@ -247,12 +265,31 @@ check_role('manager');
             document.getElementById("station-group").style.display = isOperator ? '' : 'none';
             document.getElementById("station-select").innerHTML = stationOptionsHtml(form.elements['assignment'].value, '');
         }
+        function renderAssignmentOptions(selected = '') {
+            const select = document.getElementById('assignment-select');
+            if (!select) return;
+            select.innerHTML = allLines.map(line =>
+                `<option value="${esc(line.line_name)}"${line.line_name === selected ? ' selected' : ''}>${esc(line.line_name)}</option>`
+            ).join('') + `<option value="All Lines"${selected === 'All Lines' ? ' selected' : ''}>All Lines</option>`;
+            if (!selected && allLines.length) select.value = allLines[0].line_name;
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             loadUsersData();
             const addForm = document.getElementById("addUserForm");
             addForm.elements['role'].addEventListener('change', refreshStationPicker);
             addForm.elements['assignment'].addEventListener('change', refreshStationPicker);
+
+            // Bind the secure deactivation dialog controls. Without these handlers,
+            // submitting the password form only reloads the page.
+            document.getElementById('deactivate-form').addEventListener('submit', submitDeactivate);
+            document.getElementById('deactivate-cancel').addEventListener('click', closeDeactivateModal);
+            document.getElementById('deactivate-modal').addEventListener('click', function(event) {
+                if (event.target === this) closeDeactivateModal();
+            });
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && selectedDeactivateId !== null) closeDeactivateModal();
+            });
 
             document.getElementById("addUserForm").addEventListener("submit", function(e) {
                 e.preventDefault();
@@ -282,6 +319,8 @@ check_role('manager');
                     if (data.status === 'success') {
                         allUsers = data.users;
                         allStations = data.stations || [];
+                        allLines = data.lines || [];
+                        renderAssignmentOptions(document.getElementById('assignment-select').value);
                         refreshStationPicker();
                         updateUserMetrics(allUsers, data.requests || []);
                         renderUserTable(allUsers);
@@ -324,6 +363,11 @@ check_role('manager');
                 let roleClass = u.role === 'staff' ? 'Operator' : (u.role === 'supervisor' ? 'Supervisor' : 'Manager');
                 let displayRole = roleClass;
                 let initials = u.full_name ? u.full_name.substring(0, 2).toUpperCase() : 'U';
+                const isSelf = Number(u.id) === CURRENT_USER_ID;
+                const isDisabled = String(u.status).toLowerCase() !== 'active';
+                const deactivateBtn = isDisabled
+                    ? `<button type="button" class="btn-edit-user" onclick="reactivateUser(${Number(u.id)})" title="Reactivate after manager password verification" style="color:#39b67a">Reactivate</button>`
+                    : `<button type="button" class="btn-edit-user" ${isSelf || isDisabled ? 'disabled aria-disabled="true"' : `onclick="deleteUser(${Number(u.id)})"`} title="${isSelf ? 'You cannot deactivate your own account' : isDisabled ? 'Account is already disabled' : 'Deactivate account after password verification'}" style="color:${isSelf || isDisabled ? '#89919b' : '#ff7770'};opacity:${isSelf || isDisabled ? '.5' : '1'};cursor:${isSelf || isDisabled ? 'not-allowed' : 'pointer'}">Deactivate</button>`;
 
                 tbody.innerHTML += `
                     <tr>
@@ -339,7 +383,7 @@ check_role('manager');
                         <td><span class="status-${esc(u.status)}">${esc(u.status)}</span></td>
                         <td><button type="button" class="btn-edit-user" onclick="editUser(${Number(u.id)})">Edit</button>
                             <button type="button" class="btn-edit-user" onclick="resetPassword(${Number(u.id)})">Reset password</button>
-                            <button type="button" class="btn-edit-user" onclick="deleteUser(${Number(u.id)})" style="color:#b42318;">Delete</button></td>
+                            ${deactivateBtn}</td>
                     </tr>
                 `;
             });
@@ -348,7 +392,9 @@ check_role('manager');
         function renderRequests(requests) {
             const container = document.getElementById("requests-list");
             container.innerHTML = "";
-            document.getElementById("req-badge").innerText = requests.length;
+            const requestBadge = document.getElementById("req-badge");
+            requestBadge.innerText = requests.length;
+            requestBadge.style.display = requests.length ? '' : 'none';
 
             if (!requests || requests.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.8rem;">No pending access requests.</p>';
@@ -421,26 +467,25 @@ check_role('manager');
             });
         }
 
-        function editUser(id) {
+        async function editUser(id) {
             const user = allUsers.find(item => Number(item.id) === Number(id));
             if (!user) return alert('User not found.');
-            const username = prompt('Username:', user.username || '');
+            const username = await systemPrompt('Username:', user.username || '', 'Edit user');
             if (username === null) return;
-            const full_name = prompt('Full name:', user.full_name || '');
+            const full_name = await systemPrompt('Full name:', user.full_name || '', 'Edit user');
             if (full_name === null) return;
             const currentRole = user.role === 'staff' ? 'staff' : user.role;
-            const roleInput = prompt('Role: staff, supervisor, or manager', currentRole);
+            const roleInput = await systemPrompt('Role: staff, supervisor, or manager', currentRole, 'Edit user role');
             if (roleInput === null) return;
-            const assignment = prompt('Assignment: Line 1, Line 2, Line 3, or All Lines', user.assignment || '');
+            const assignment = await systemPrompt('Assignment: ' + allLines.map(line => line.line_name).concat('All Lines').join(', '), user.assignment || '', 'Edit user assignment');
             if (assignment === null) return;
             let station = '';
             if (roleInput.trim().toLowerCase() === 'staff') {
                 const codes = stationsForLine(assignment.trim()).map(st => st.station_code).join(', ');
-                station = prompt('Station for this operator (' + codes + '):', user.assigned_station || '');
+                station = await systemPrompt('Station for this operator (' + codes + '):', user.assigned_station || '', 'Assign operator station');
                 if (station === null) return;
             }
-            const status = prompt('Status: Active or Disabled', user.status || 'Active');
-            if (status === null) return;
+            const status = user.status; // Account activation state is managed by the password-confirmed action only.
             postUserAction('update_user', {id, username: username.trim(), full_name: full_name.trim(),
                 role: roleInput.trim().toLowerCase(), assignment: assignment.trim(),
                 assigned_station: station.trim(), status: status.trim()})
@@ -448,9 +493,9 @@ check_role('manager');
                 .catch(error => alert(error.message));
         }
 
-        function resetPassword(id) {
+        async function resetPassword(id) {
             const user = allUsers.find(item => Number(item.id) === Number(id));
-            if (!user || !confirm(`Reset the password for "${user.username}"? Their current password will stop working.`)) return;
+            if (!user || !await systemConfirm(`Reset the password for "${user.username}"? Their current password will stop working.`, 'Reset password')) return;
             postUserAction('reset_password', {id})
                 .then(data => {
                     alert(data.message + "\nUsername: " + data.username + "\nTemporary password: " + data.temporary_password +
@@ -460,13 +505,71 @@ check_role('manager');
                 .catch(error => alert(error.message));
         }
 
+        function closeDeactivateModal() {
+            const modal = document.getElementById('deactivate-modal');
+            modal.style.display = 'none';
+            modal.hidden = true;
+            selectedDeactivateId = null;
+            pendingAccountAction = null;
+            document.getElementById('deactivate-form').reset();
+            document.getElementById('deactivate-error').hidden = true;
+        }
+
         function deleteUser(id) {
             const user = allUsers.find(item => Number(item.id) === Number(id));
-            if (!user || !confirm(`Delete account "${user.username}"? This cannot be undone.`)) return;
-            postUserAction('delete_user', {id})
-                .then(data => { alert(data.message); loadUsersData(); })
-                .catch(error => alert(error.message));
+            if (!user || Number(id) === CURRENT_USER_ID || String(user.status).toLowerCase() !== 'active') return;
+            selectedDeactivateId = Number(id);
+            pendingAccountAction = 'delete_user';
+            document.getElementById('deactivate-title').textContent = 'Deactivate account';
+            document.getElementById('deactivate-submit').textContent = 'Deactivate account';
+            document.getElementById('deactivate-submit').style.background = '#b42318';
+            document.getElementById('deactivate-summary').textContent = `Deactivate "${user.full_name || user.username}" (${user.username})? This will block the account from signing in.`;
+            const modal = document.getElementById('deactivate-modal');
+            modal.hidden = false;
+            modal.style.display = 'flex';
+            document.getElementById('deactivate-password').focus();
         }
+
+        function reactivateUser(id) {
+            const user = allUsers.find(item => Number(item.id) === Number(id));
+            if (!user || String(user.status).toLowerCase() !== 'disabled') return;
+            selectedDeactivateId = Number(id);
+            pendingAccountAction = 'reactivate_user';
+            document.getElementById('deactivate-title').textContent = 'Reactivate account';
+            document.getElementById('deactivate-submit').textContent = 'Reactivate account';
+            document.getElementById('deactivate-submit').style.background = '#168653';
+            document.getElementById('deactivate-summary').textContent = `Reactivate "${user.full_name || user.username}" (${user.username})? This will restore sign-in access to the existing account.`;
+            const modal = document.getElementById('deactivate-modal');
+            modal.hidden = false;
+            modal.style.display = 'flex';
+            document.getElementById('deactivate-error').hidden = true;
+            document.getElementById('deactivate-password').focus();
+        }
+
+        async function submitDeactivate(event) {
+            event.preventDefault();
+            if (!selectedDeactivateId) return;
+            const button = document.getElementById('deactivate-submit');
+            const error = document.getElementById('deactivate-error');
+            const password = document.getElementById('deactivate-password').value;
+            if (!password) return;
+            button.disabled = true;
+            button.textContent = 'Verifying...';
+            error.hidden = true;
+            try {
+                const data = await postUserAction(pendingAccountAction, {id: selectedDeactivateId, manager_password: password});
+                closeDeactivateModal();
+                await loadUsersData();
+                alert(data.message);
+            } catch (e) {
+                error.textContent = e.message;
+                error.hidden = false;
+            } finally {
+                button.disabled = false;
+                button.textContent = pendingAccountAction === 'reactivate_user' ? 'Reactivate account' : 'Deactivate account';
+            }
+        }
+
         function filterRole(roleName) {
             document.querySelectorAll(".btn-filter-pill").forEach(btn => {
                 btn.classList.remove("active");

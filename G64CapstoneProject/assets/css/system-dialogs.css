@@ -1,0 +1,95 @@
+#system-dialog-host {
+    position: fixed;
+    z-index: 10000;
+    inset: 0;
+    pointer-events: none;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.system-toast {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    width: min(390px, calc(100vw - 32px));
+    margin: 18px 20px 0 auto;
+    padding: 15px 42px 15px 17px;
+    border: 1px solid #3b4856;
+    border-left: 4px solid #7ee787;
+    border-radius: 10px;
+    background: #202832;
+    color: #e6edf3;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .38);
+    animation: system-toast-in .2s ease-out;
+    pointer-events: auto;
+}
+
+.system-toast strong { font-size: .9rem; }
+.system-toast span { color: #c2cbd4; font-size: .84rem; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
+.system-toast-error { border-left-color: #f85149; }
+.system-toast-info { border-left-color: #58a6ff; }
+.system-toast-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: 0;
+    background: transparent;
+    color: #aeb8c2;
+    font-size: 1.35rem;
+    cursor: pointer;
+}
+
+.system-dialog-backdrop {
+    position: fixed;
+    z-index: 10001;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(5, 10, 15, .72);
+    pointer-events: auto;
+}
+
+.system-dialog {
+    width: min(440px, 100%);
+    padding: 24px;
+    border: 1px solid #3b4856;
+    border-radius: 12px;
+    background: #202832;
+    color: #e6edf3;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+}
+
+.system-dialog h2 { margin: 0 0 10px; font-size: 1.1rem; }
+.system-dialog p { margin: 0; color: #c2cbd4; font-size: .9rem; line-height: 1.55; }
+.system-dialog-label { display: block; color: #c2cbd4; font-size: .85rem; }
+.system-dialog-input {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid #485666;
+    border-radius: 7px;
+    background: #121920;
+    color: #e6edf3;
+    font: inherit;
+}
+.system-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.system-dialog-actions button {
+    padding: 9px 15px;
+    border-radius: 7px;
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.system-dialog-secondary { border: 1px solid #485666; background: transparent; color: #d3dae2; }
+.system-dialog-primary { border: 1px solid #238636; background: #238636; color: #fff; }
+
+@keyframes system-toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .system-toast { animation: none; }
+}

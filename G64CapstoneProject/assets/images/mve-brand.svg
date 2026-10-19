@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Masters Vineyard Enterprise</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a3e635"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#111827"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#374151" stroke-width="2"/>
+  <path d="M13 48V25l10 12 9-15 9 15 10-12v23" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+  <path d="M39 19c2-8 10-11 16-9-1 8-6 13-15 12" fill="url(#leaf)"/>
+  <path d="M39 23c4-4 8-7 13-10" fill="none" stroke="#d9f99d" stroke-linecap="round" stroke-width="1.5"/>
+  <circle cx="17" cy="54" r="2" fill="#84cc16"/>
+  <circle cx="24" cy="54" r="2" fill="#84cc16"/>
+  <circle cx="31" cy="54" r="2" fill="#84cc16"/>
+  <circle cx="38" cy="54" r="2" fill="#84cc16"/>
+  <circle cx="45" cy="54" r="2" fill="#84cc16"/>
+  <circle cx="52" cy="54" r="2" fill="#84cc16"/>
+</svg>

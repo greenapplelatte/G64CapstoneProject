@@ -183,7 +183,7 @@ check_role('manager');
                     <div class="card">
                         <div class="card-header-bar header-green">
                             <span>SYSTEM STATUS</span>
-                            <small style="color:var(--text-primary); text-transform:none;">All services running</small>
+                            <small style="color:var(--text-primary); text-transform:none;">Application and database connected</small>
                         </div>
                         <div class="card-body">
                             <div class="status-row">
@@ -194,31 +194,30 @@ check_role('manager');
                             <div class="status-row" style="flex-direction: column; align-items: flex-start;">
                                 <div style="display:flex; justify-content:space-between; width:100%;">
                                     <div><span class="dot-indicator dot-green"></span> <strong>Database</strong></div>
-                                    <span style="color:var(--text-secondary);">62% of 50 GB</span>
+                                    <span style="color:var(--accent-green);">Connected</span>
                                 </div>
-                                <div class="storage-bar-bg"><div class="storage-bar-fill" style="width: 62%;"></div></div>
                             </div>
 
                             <div class="status-row">
                                 <div><span class="dot-indicator dot-yellow"></span> <strong>Stations</strong></div>
-                                <span style="color:var(--accent-yellow); font-weight:bold;">11 of 12 online</span>
+                                <span style="color:var(--accent-yellow); font-weight:bold;">Software counting · no device link</span>
                             </div>
 
                             <div class="status-row">
-                                <div><span class="dot-indicator dot-green"></span> <strong>Last backup</strong></div>
-                                <span style="color:var(--text-secondary);">Oct 09 · 03:00 AM</span>
+                                <div><span class="dot-indicator dot-yellow"></span> <strong>Last backup</strong></div>
+                                <span style="color:var(--text-secondary);">Not configured</span>
                             </div>
 
                             <div class="status-row">
-                                <span style="color:var(--text-secondary);">Version</span>
-                                <strong>2.4.1</strong>
+                                <span style="color:var(--text-secondary);">Monitoring source</span>
+                                <strong>In-app software counter</strong>
                             </div>
                         </div>
                     </div>
 
                     <!-- Station Connectivity Widget -->
                     <div class="card">
-                        <div class="card-header-bar header-blue">STATION CONNECTIVITY</div>
+                        <div class="card-header-bar header-blue">OPTIONAL DEVICE HEARTBEAT</div>
                         <div class="card-body">
                             <div class="form-row">
                                 <div class="form-group">
@@ -232,7 +231,7 @@ check_role('manager');
                             </div>
 
                             <div class="warning-box">
-                                <strong>Live station alerts will appear when monitoring data is available.</strong>
+                                <strong>Staff production counts use in-app controls. Heartbeat settings apply only if a device integration is enabled.</strong>
                             </div>
                         </div>
                     </div>

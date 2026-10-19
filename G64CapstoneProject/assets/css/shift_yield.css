@@ -353,6 +353,19 @@ body {
     margin: 12px 0;
 }
 
+.btn-closeout-enabled {
+    background: var(--accent-green);
+    color: #101510;
+    border: 1px solid var(--accent-green);
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin: 12px 0;
+}
+
 .export-btn-group {
     display: flex;
     gap: 10px;
@@ -368,4 +381,31 @@ body {
     font-weight: bold;
     font-size: 0.8rem;
     cursor: pointer;
+}
+
+@media print {
+    .sidebar,
+    .export-btn-group,
+    #btn-closeout-shift,
+    #closeout-comment,
+    .filter-pills-row {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0;
+        padding: 0;
+        color: #111;
+    }
+
+    body,
+    .card {
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    .card {
+        border: 1px solid #bbb;
+        break-inside: avoid;
+    }
 }

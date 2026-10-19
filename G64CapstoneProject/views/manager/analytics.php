@@ -37,17 +37,16 @@ check_role('manager');
         <div class="filter-controls-bar">
             <div class="filter-row">
                 <span class="filter-label">PERIOD</span>
-                <button class="btn-filter">7 days</button>
-                <button class="btn-filter active">30 days</button>
-                <button class="btn-filter">Quarter</button>
-                <button class="btn-filter">Year</button>
+                <div id="analytics-period-filter">
+                    <button class="btn-filter" data-days="7">7 days</button>
+                    <button class="btn-filter active" data-days="30">30 days</button>
+                    <button class="btn-filter" data-days="90">Quarter</button>
+                    <button class="btn-filter" data-days="365">Year</button>
+                </div>
             </div>
             <div class="filter-row">
                 <span class="filter-label">LINE</span>
-                <button class="btn-filter active">All lines</button>
-                <button class="btn-filter">Line 1</button>
-                <button class="btn-filter">Line 2</button>
-                <button class="btn-filter">Line 3</button>
+                <div id="analytics-line-filter"><button class="btn-filter active" data-line="all">All lines</button></div>
             </div>
         </div>
 
@@ -61,9 +60,9 @@ check_role('manager');
                         <small id="yield-date-range">Last 30 days · awaiting data</small>
                     </div>
                     <div class="card-body">
-                           <div class="yield-summary-title">
-                              <span class="yield-meta">Daily production yield</span>
-                           </div>
+                        <div class="yield-summary-title">
+                            <span class="yield-meta">Daily production yield · average <strong id="yield-average">—</strong></span>
+                        </div>
                         <!-- SVG Line Chart -->
                         <div class="chart-container">
                             <svg class="yield-svg" viewBox="0 0 600 180" preserveAspectRatio="none">
@@ -84,8 +83,8 @@ check_role('manager');
                                 <text x="40" y="174" class="chart-axis-text" text-anchor="end">90%</text>
 
                                 <!-- Target 97% Line -->
-                                <line x1="50" y1="80" x2="570" y2="80" class="target-line"/>
-                                <text x="570" y="72" class="target-label">Target 97%</text>
+                                <line id="yield-target-line" x1="50" y1="80" x2="570" y2="80" class="target-line"/>
+                                <text id="yield-target-label" x="570" y="72" class="target-label">Target 97%</text>
 
                                 <!-- Dynamic Line Path -->
                                 <path id="yield-line-path" class="trend-line" d="" />
@@ -103,21 +102,15 @@ check_role('manager');
                     </div>
                     <div class="card-body">
                         <!-- Defect Category Pills -->
-                        <div class="defect-pills">
-                            <button class="btn-defect-pill active" onclick="loadRootCause('Short shot')">Short shot</button>
-                            <button class="btn-defect-pill" onclick="loadRootCause('Scratch')">Scratch</button>
-                            <button class="btn-defect-pill" onclick="loadRootCause('Crack')">Crack</button>
-                            <button class="btn-defect-pill" onclick="loadRootCause('Flash')">Flash</button>
-                            <button class="btn-defect-pill" onclick="loadRootCause('Warpage')">Warpage</button>
-                        </div>
+                        <div class="defect-pills" id="defect-type-pills"></div>
 
                         <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom: 12px;">
-                            Verified defect-factor correlations will appear when source data is available.
+                            Confirmed defect reports are compared with production share by workstation for the selected dates.
                         </p>
 
                         <div class="legend-row">
-                            <div class="legend-item"><span class="legend-color-orange"></span> Share of short shots</div>
-                            <div class="legend-item"><span class="legend-color-gray"></span> Share of output</div>
+                            <div class="legend-item"><span class="legend-color-orange"></span> Share of selected defect rejects</div>
+                            <div class="legend-item"><span class="legend-color-gray"></span> Share of produced units</div>
                         </div>
 
                         <!-- Factors Correlation Meters Container -->
@@ -126,8 +119,7 @@ check_role('manager');
                         </div>
 
                         <div class="btn-action-row">
-                            <button class="btn-outline-gold">Assign Investigation</button>
-                            <button class="btn-secondary-gray">Export analysis</button>
+                            <button class="btn-secondary-gray" id="export-root-cause">Export analysis CSV</button>
                         </div>
                     </div>
                 </div>
@@ -139,7 +131,7 @@ check_role('manager');
                 <div class="card">
                     <div class="card-header-bar header-blue">
                         <span>COMPARE PERIODS</span>
-                        <small>vs previous 30 days</small>
+                        <small id="comparison-period-label">Previous matching period</small>
                     </div>
                     <div class="card-body" style="padding: 0;">
                         <table class="compare-table">
@@ -151,19 +143,19 @@ check_role('manager');
                                     <th>CHANGE</th>
                                 </tr>
                             </thead>
-                            <tbody id="comparison-table-body"><tr><td colspan="4">No verified comparison data available.</td></tr></tbody>
+                            <tbody id="comparison-table-body"><tr><td colspan="4">No production data available for comparison.</td></tr></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Report History Widget -->
+                <!-- Report Export Widget -->
                 <div class="card">
                     <div class="card-header-bar header-green">
-                        <span>REPORT HISTORY</span>
-                        <small id="report-count-badge">4 saved</small>
+                        <span>REPORT EXPORT</span>
+                        <small id="report-count-badge">Current selection</small>
                     </div>
-                    <div class="card-body" id="report-history-list">
-                        <!-- Populated dynamically via JS -->
+                    <div class="card-body">
+                        <p id="report-history-list">Export the filtered yield, defect, and line data as a CSV file.</p>
                     </div>
                 </div>
 
@@ -174,7 +166,7 @@ check_role('manager');
                         <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom: 15px;">
                             Uses the period and line selected above. Reports count confirmed rejects only.
                         </p>
-                        <button class="btn-generate-light">GENERATE REPORT</button>
+                        <button class="btn-generate-light" id="generate-analytics-report" type="button">DOWNLOAD CURRENT REPORT</button>
                     </div>
                 </div>
             </div>
@@ -183,21 +175,66 @@ check_role('manager');
 
     <!-- Inline Analytics Script -->
     <script>
+        const analyticsState = {days:30, line:'all', defectType:'', data:null};
         document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('analytics-period-filter').addEventListener('click', event => {
+                const button = event.target.closest('[data-days]');
+                if (!button) return;
+                analyticsState.days = Number(button.dataset.days);
+                loadAnalyticsData();
+            });
+            document.getElementById('analytics-line-filter').addEventListener('click', event => {
+                const button = event.target.closest('[data-line]');
+                if (!button) return;
+                analyticsState.line = button.dataset.line;
+                loadAnalyticsData();
+            });
+            document.getElementById('defect-type-pills').addEventListener('click', event => {
+                const button = event.target.closest('[data-defect-type]');
+                if (!button) return;
+                analyticsState.defectType = button.dataset.defectType;
+                loadAnalyticsData();
+            });
+            document.getElementById('export-root-cause').addEventListener('click', exportAnalyticsCsv);
+            document.getElementById('generate-analytics-report').addEventListener('click', exportAnalyticsCsv);
             loadAnalyticsData();
         });
 
-        function loadAnalyticsData() {
-            fetch(BASE_URL + '/backend/get_analytics_data.php')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        renderYieldChart(data.daily_yield || []);
-                        renderFactors(data.factors);
-                        renderReports(data.reports);
-                    }
-                })
-                .catch(err => console.error("Error loading analytics data:", err));
+        async function loadAnalyticsData() {
+            const params = new URLSearchParams({days:String(analyticsState.days), line:analyticsState.line});
+            if (analyticsState.defectType) params.set('defect_type', analyticsState.defectType);
+            try {
+                const response = await fetch(`${BASE_URL}/backend/get_analytics_data.php?${params}`);
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Unable to load analytics.');
+                analyticsState.data = data;
+                analyticsState.defectType = data.selected_defect_type || '';
+                document.getElementById('yield-target-label').textContent = `Target ${data.yield_target_pct}%`;
+                const targetY = 170 - ((Math.max(90, Math.min(100, Number(data.yield_target_pct))) - 90) / 10) * 150;
+                document.getElementById('yield-target-line').setAttribute('y1', targetY);
+                document.getElementById('yield-target-line').setAttribute('y2', targetY);
+                document.getElementById('yield-target-label').setAttribute('y', targetY - 8);
+                renderFilters(data);
+                renderYieldChart(data.daily_yield || []);
+                renderFactors(data.factors || []);
+                renderComparison(data.comparison);
+                document.getElementById('defect-period-summary').textContent = `${data.days} days · ${data.line === 'all' ? 'All lines' : data.line}`;
+                document.getElementById('report-history-list').textContent = `${data.days}-day report · ${data.line === 'all' ? 'All lines' : data.line} · confirmed defects only`;
+            } catch (err) {
+                console.error('Error loading analytics data:', err);
+                document.getElementById('factors-container').textContent = err.message;
+            }
+        }
+
+        function renderFilters(data) {
+            document.querySelectorAll('#analytics-period-filter [data-days]').forEach(button => {
+                button.classList.toggle('active', Number(button.dataset.days) === Number(data.days));
+            });
+            const lineBox = document.getElementById('analytics-line-filter');
+            lineBox.innerHTML = `<button class="btn-filter ${data.line === 'all' ? 'active' : ''}" data-line="all">All lines</button>` +
+                (data.lines || []).map(line => `<button class="btn-filter ${data.line === line.line_name ? 'active' : ''}" data-line="${esc(line.line_name)}">${esc(line.line_name)}</button>`).join('');
+            const typeBox = document.getElementById('defect-type-pills');
+            typeBox.innerHTML = (data.defect_types || []).map(type => `<button class="btn-defect-pill ${data.selected_defect_type === type.name ? 'active' : ''}" data-defect-type="${esc(type.name)}">${esc(type.name)}</button>`).join('');
         }
 
         function renderYieldChart(yieldData) {
@@ -205,7 +242,7 @@ check_role('manager');
                 document.getElementById('yield-line-path').setAttribute('d', '');
                 document.getElementById('yield-points-group').innerHTML = '<text x="300" y="100" text-anchor="middle" class="chart-axis-text">No verified yield data available</text>';
                 document.getElementById('yield-average').textContent = '—';
-                document.getElementById('yield-date-range').textContent = 'Last 30 days · no production records';
+                document.getElementById('yield-date-range').textContent = `${analyticsState.days} days · no closed-shift production records`;
                 return;
             }
             const avg = yieldData.reduce((sum, item) => sum + Number(item.yield_value || 0), 0) / yieldData.length;
@@ -218,13 +255,13 @@ check_role('manager');
             const minY = 170; // 90%
             const maxY = 20;  // 100%
 
-            const stepX = (endX - startX) / (yieldData.length - 1);
+            const stepX = yieldData.length > 1 ? (endX - startX) / (yieldData.length - 1) : 0;
             let pathD = "";
             let pointsHTML = "";
 
             yieldData.forEach((item, index) => {
                 const val = parseFloat(item.yield_value);
-                const cx = startX + (index * stepX);
+                const cx = yieldData.length > 1 ? startX + (index * stepX) : (startX + endX) / 2;
                 const cy = minY - ((val - 90) / (100 - 90)) * (minY - maxY);
 
                 if (index === 0) {
@@ -247,21 +284,6 @@ check_role('manager');
 
             document.getElementById('yield-line-path').setAttribute('d', pathD);
             document.getElementById('yield-points-group').innerHTML = pointsHTML;
-        }
-
-        function loadRootCause(defectType) {
-            document.querySelectorAll('.btn-defect-pill').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.innerText === defectType) btn.classList.add('active');
-            });
-
-            fetch(`${BASE_URL}/backend/get_analytics_data.php?defect_type=${encodeURIComponent(defectType)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        renderFactors(data.factors);
-                    }
-                });
         }
 
         function renderFactors(factors) {
@@ -293,24 +315,39 @@ check_role('manager');
             });
         }
 
-        function renderReports(reports) {
-            const container = document.getElementById('report-history-list');
-            container.innerHTML = '';
-            reports = reports || [];
-            document.getElementById('report-count-badge').innerText = reports.length + ' saved';
-            if (!reports.length) { container.innerHTML = '<p>No reports have been generated yet.</p>'; return; }
+        function renderComparison(comparison) {
+            const tbody = document.getElementById('comparison-table-body');
+            const label = document.getElementById('comparison-period-label');
+            label.textContent = `Previous ${analyticsState.days} days`;
+            if (!comparison || comparison.current_yield == null) {
+                tbody.innerHTML = '<tr><td colspan="4">No closed-shift yield data available for this comparison.</td></tr>';
+                return;
+            }
+            const before = comparison.previous_yield;
+            const change = before == null ? null : Number(comparison.current_yield) - Number(before);
+            tbody.innerHTML = `<tr><td>Weighted yield</td><td>${Number(comparison.current_yield).toFixed(1)}%</td><td>${before == null ? '—' : Number(before).toFixed(1) + '%'}</td><td>${change == null ? '—' : (change > 0 ? '+' : '') + change.toFixed(1) + ' pp'}</td></tr>`;
+        }
 
-            reports.forEach(r => {
-                container.innerHTML += `
-                    <div class="report-item">
-                        <div class="report-title">
-                            <strong>${esc(r.title)}</strong>
-                            <small>${esc(r.file_format)} · ${esc(r.generated_time)}</small>
-                        </div>
-                        <a href="${esc(r.download_url)}" class="btn-download">Download</a>
-                    </div>
-                `;
-            });
+        function csvCell(value) {
+            let text = String(value ?? '');
+            if (/^[=+\-@]/.test(text)) text = "'" + text;
+            return '"' + text.replace(/"/g, '""') + '"';
+        }
+
+        function exportAnalyticsCsv() {
+            const data = analyticsState.data;
+            if (!data) { alert('Analytics data is not loaded yet.'); return; }
+            const rows = [['section','date_or_factor','metric','value']];
+            (data.daily_yield || []).forEach(day => rows.push(['Daily yield',day.day_label,'yield_pct',day.yield_value]));
+            (data.factors || []).forEach(factor => rows.push(['Defect comparison',factor.factor_name,'defect_share_pct',factor.defect_share_pct],['Defect comparison',factor.factor_name,'output_share_pct',factor.output_share_pct],['Defect comparison',factor.factor_name,'multiplier',factor.multiplier]));
+            rows.push(['Filters','period_days',data.days],['Filters','line',data.line],['Filters','defect_type',data.selected_defect_type || '']);
+            const csv = rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+            const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `production-analytics-${data.days}d-${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>

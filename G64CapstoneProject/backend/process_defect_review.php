@@ -13,11 +13,13 @@ $action = $_GET['action'] ?? '';
 if ($action === 'get_queue') {
     $reports = db_all($conn, "SELECT * FROM defect_reports ORDER BY id DESC");
     $pending_cnt = 0;
+    $recheck_cnt = 0;
     $confirmed_cnt = 0;
     $rejected_cnt = 0;
 
     foreach ($reports as $row) {
-        if ($row['status'] === 'Pending') $pending_cnt++;
+        if ($row['status'] === 'Pending' || $row['status'] === 'Recheck Requested') $pending_cnt++;
+        if ($row['status'] === 'Recheck Requested') $recheck_cnt++;
         if ($row['status'] === 'Confirmed') $confirmed_cnt++;
         if ($row['status'] === 'Rejected') $rejected_cnt++;
     }
@@ -26,6 +28,7 @@ if ($action === 'get_queue') {
         'status' => 'success',
         'stats' => [
             'pending' => $pending_cnt,
+            'recheck_requested' => $recheck_cnt,
             'confirmed' => $confirmed_cnt,
             'rejected' => $rejected_cnt,
             'all' => count($reports)
@@ -90,6 +93,7 @@ if ($action === 'review_report') {
         $conn->commit();
     } catch (Throwable $e) {
         $conn->rollback();
+        error_log('Supervisor defect review failed for report ' . $report_id . ': ' . $e->getMessage());
         json_out(['status' => 'error', 'message' => 'Failed to update report.'], 500);
     }
 
